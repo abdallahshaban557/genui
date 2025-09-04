@@ -116,6 +116,7 @@ class Catalog {
           items: widgetSchema,
         ),
       },
+      required: ['root', 'widgets'],
     );
   }
 }

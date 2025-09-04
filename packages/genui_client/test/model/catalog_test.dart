@@ -33,14 +33,20 @@ void main() {
 
       expect(schema, isA<ObjectSchema>());
       final properties = (schema as ObjectSchema).properties!;
-      expect(properties.containsKey('id'), isTrue);
-      expect(properties.containsKey('widget'), isTrue);
+      expect(properties.containsKey('root'), isTrue);
+      expect(properties.containsKey('widgets'), isTrue);
 
-      final widgetSchema = properties['widget']!;
-      expect(widgetSchema.anyOf, isNotNull);
-      expect(widgetSchema.anyOf!.length, 1);
+      final widgetsSchema = properties['widgets']! as ListSchema;
+      final widgetSchema = widgetsSchema.items! as ObjectSchema;
+      final widgetProperties = widgetSchema.properties!;
+      expect(widgetProperties.containsKey('id'), isTrue);
+      expect(widgetProperties.containsKey('widget'), isTrue);
 
-      final testWidgetSchema = widgetSchema.anyOf![0];
+      final widgetPropertySchema = widgetProperties['widget']!;
+      expect(widgetPropertySchema.anyOf, isNotNull);
+      expect(widgetPropertySchema.anyOf!.length, 1);
+
+      final testWidgetSchema = widgetPropertySchema.anyOf![0];
       expect(
         (testWidgetSchema as ObjectSchema).properties?.containsKey(
           'TestWidget',

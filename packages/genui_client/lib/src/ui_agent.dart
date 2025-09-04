@@ -24,13 +24,12 @@ class UiAgent {
   /// If [genUiManager] or [client] are not provided, default instances are
   /// created.
   UiAgent({GenUiManager? genUiManager, GenUIClient? client})
-    : _genUiManager = genUiManager ?? GenUiManager(),
-      _client = client ?? GenUIClient();
+      : _genUiManager = genUiManager ?? GenUiManager(),
+        _client = client ?? GenUIClient();
 
   final GenUiManager _genUiManager;
   final GenUIClient _client;
   final _conversation = ValueNotifier<List<ChatMessage>>([]);
-  String? _sessionId;
 
   void _addMessage(ChatMessage message) {
     _conversation.value.add(message);
@@ -60,11 +59,6 @@ class UiAgent {
     return _genUiManager.surface(surfaceId);
   }
 
-  /// Starts a new session with the GenUI server.
-  Future<void> startSession() async {
-    _sessionId = await _client.startSession(_genUiManager.catalog);
-  }
-
   /// Sends a list of UI events to the GenUI server.
   Future<void> sendUiEvents(List<UiEvent> events) async {
     await sendRequest(UserMessage(events.map(UiEventPart.new).toList()));
@@ -72,14 +66,11 @@ class UiAgent {
 
   /// Sends a request to the GenUI server to generate a UI.
   Future<void> sendRequest(UserMessage message) async {
-    if (_sessionId == null) {
-      throw StateError('Session not started. Call startSession() first.');
-    }
     _addMessage(message);
     _isProcessing.value = true;
     try {
       await for (final chatMessage in _client.generateUI(
-        _sessionId!,
+        _genUiManager.catalog,
         _conversation.value,
       )) {
         if (chatMessage is AiUiMessage) {

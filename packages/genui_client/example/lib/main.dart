@@ -51,7 +51,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _init() async {
-    await _uiAgent.startSession();
     if (mounted) {
       setState(() {
         _isInitialized = true;
