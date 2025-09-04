@@ -29,9 +29,7 @@ graph TD
 
 2.  **`GenUIClient`**: This class handles all network communication with the `genui_server`.
 
-    - It manages the `sessionId` for the conversation.
-    - **`startSession(Catalog catalog)`**: Performs the initial handshake.
-    - **`generateUI(String sessionId, List<ChatMessage> conversation)`**: Returns a `Stream<ChatMessage>` from the server. The client listens to this stream to receive real-time UI updates and final text messages.
+    - **`generateUI(Catalog catalog, List<ChatMessage> conversation)`**: Returns a `Stream<ChatMessage>` from the server. The client listens to this stream to receive real-time UI updates and final text messages.
 
 3.  **`GenUiManager`**: The client-side state manager for all dynamic UI surfaces. It implements the `SurfaceBuilder` interface and holds the `WidgetValueStore` to maintain the state of individual widgets (e.g., text field input).
 
@@ -55,11 +53,11 @@ The package also provides high-level widgets to quickly build chat-based UIs.
 
 The client drives the conversation and reacts to a stream of UI updates from the server, orchestrated by the `UiAgent`.
 
-1.  **Initialization & Handshake**: The application creates a `UiAgent` and calls `startSession()`. The agent then uses its internal `GenUIClient` to send the catalog to the server and receive a `sessionId`.
+1.  **Initialization**: The application creates a `UiAgent`.
 2.  **User Interaction**: The user provides input (e.g., through a chat interface or by interacting with a generated UI).
 3.  **Event Handling**: UI events are passed to the `UiEventManager`. State-changing events (like typing in a text field) are cached. Action events (like tapping a button) trigger the manager to send all cached events for that surface to the `UiAgent`.
 4.  **API Call**: The `UiAgent` calls `sendUiEvents` or `sendRequest`, which packages the events or text into a `UserMessage` and adds it to the conversation history.
-5.  **Streaming Request**: The `UiAgent` calls `genUIClient.generateUI`, which makes the HTTP request with the full conversation history and returns a `Stream<ChatMessage>`.
+5.  **Streaming Request**: The `UiAgent` calls `genUIClient.generateUI`, which makes the HTTP request with the full conversation history and the catalog, and returns a `Stream<ChatMessage>`.
 6.  **Processing Stream**: The `UiAgent` listens to the stream. As each `AiUiMessage` (containing a UI definition) or `AiTextMessage` arrives, it calls `genUiManager.addOrUpdateSurface(...)` or adds it to the conversation.
 7.  **Rendering**: The `GenUiManager` notifies the appropriate `GenUiSurface` widget, which rebuilds to show the latest changes in real-time.
 
@@ -72,18 +70,6 @@ sequenceDiagram
     participant GenUiManager
     participant GenUiSurface
 
-    AppLogic->>UiAgent: startSession()
-    activate UiAgent
-
-    UiAgent->>GenUIClient: startSession(catalog)
-    activate GenUIClient
-    Note right of GenUIClient: Sends catalog, gets/stores sessionId
-    GenUIClient-->>UiAgent: session started
-    deactivate GenUIClient
-
-    UiAgent-->>AppLogic: session ready
-    deactivate UiAgent
-
     loop Conversation
         AppLogic->>UiEventManager: add(UiEvent)
         activate UiEventManager
@@ -92,7 +78,7 @@ sequenceDiagram
         deactivate UiEventManager
         activate UiAgent
 
-        UiAgent->>GenUIClient: generateUI(sessionId, conversation)
+        UiAgent->>GenUIClient: generateUI(catalog, conversation)
         activate GenUIClient
         Note right of GenUIClient: Returns a Stream<ChatMessage>
         GenUIClient-->>UiAgent: Stream<ChatMessage>

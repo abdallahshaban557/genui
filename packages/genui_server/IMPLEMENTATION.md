@@ -12,11 +12,8 @@ The server is built using the Genkit framework in TypeScript and managed with th
 graph TD
     subgraph "genui_server"
         A["Client Request"] --> B{"API Endpoints"}
-        B -- "/startSession" --> C["startSessionFlow"]
         B -- "/generateUi" --> D["generateUiFlow (Streaming)"]
 
-        C -- "Caches Catalog" --> E["Session Cache (Firestore)"]
-        D -- "Retrieves Catalog" --> E
         D -- "Invokes LLM" --> F{"LLM (Gemini)"}
         F -- "Calls Tools" --> G["UI Tools (addOrUpdateSurface, deleteSurface)"]
         D -- "Streams Tool Requests" --> H["Streamed JSON Response"]
@@ -29,35 +26,12 @@ graph TD
 2.  **TypeScript**: The language for implementation, providing type safety.
 3.  **pnpm**: For efficient and deterministic package management.
 4.  **Zod**: For defining the schemas for API inputs.
-5.  **Session Cache**: A Firestore-based cache to store widget catalogs associated with session IDs.
 
 ## API Design
 
-The server exposes two primary HTTP endpoints, each corresponding to a Genkit flow.
+The server exposes one primary HTTP endpoint, which corresponds to a Genkit flow.
 
-### 1. `POST /startSession`
-
-This endpoint initializes a new session for a client and corresponds to the `startSessionFlow`.
-
-- **Purpose**: To register a client's UI capabilities (its widget catalog) with the server and establish a session.
-- **Request Body Schema** (`startSessionRequestSchema`):
-
-  ```typescript
-  z.object({
-    protocolVersion: z.string(),
-    catalog: jsonSchema, // A recursive Zod schema for JSON schemas
-  });
-  ```
-
-- **Response Body**: A JSON object containing the unique session identifier.
-
-  ```json
-  {
-    "result": "unique-session-identifier"
-  }
-  ```
-
-### 2. `POST /generateUi` (Streaming)
+### `POST /generateUi` (Streaming)
 
 This endpoint generates UI updates in real-time for a given conversation and corresponds to the `generateUiFlow`.
 
@@ -66,7 +40,7 @@ This endpoint generates UI updates in real-time for a given conversation and cor
 
   ```typescript
   z.object({
-    sessionId: z.string(),
+    catalog: jsonSchema,
     conversation: z.array(messageSchema), // A schema for the conversation history
   });
   ```
@@ -83,7 +57,7 @@ This endpoint generates UI updates in real-time for a given conversation and cor
 
 - **Logic**:
   1.  The flow is a **streaming Genkit flow**.
-  2.  It retrieves the `catalog` from the Firestore session cache using the `sessionId`.
+  2.  It uses the `catalog` from the request to generate a system prompt for the LLM.
   3.  It uses statically defined `addOrUpdateSurface` and `deleteSurface` Genkit tools with strict Zod schemas.
   4.  It transforms incoming `UiEventPart` messages into descriptive text for the LLM.
   5.  When the LLM calls one of these tools, the flow immediately `yield`s the `toolRequest` object as a chunk in the response stream.
@@ -99,13 +73,8 @@ sequenceDiagram
     participant Server
     participant LLM
 
-    Client->>+Server: POST /startSession (protocolVersion, catalog)
-    Server->>Server: Cache catalog in Firestore, generate sessionId
-    Server-->>-Client: 200 OK { result: "sessionId" }
-
     loop Conversation
-        Client->>+Server: POST /generateUi (sessionId, conversation with UiEvent)
-        Server->>Server: Retrieve catalog by sessionId
+        Client->>+Server: POST /generateUi (catalog, conversation with UiEvent)
         Server->>Server: Convert UiEvent to text for LLM
         Server->>LLM: generateStream(conversation, tools)
         LLM-->>Server: toolRequest: addOrUpdateSurface(...)
