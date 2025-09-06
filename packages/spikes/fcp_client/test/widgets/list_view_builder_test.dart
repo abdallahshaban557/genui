@@ -11,16 +11,16 @@ void main() {
     testWidgets('builds a list of items from state', (
       WidgetTester tester,
     ) async {
-      final registry = WidgetCatalogRegistry()
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry()
         ..register(
           CatalogItem(
             name: 'ListViewBuilder',
-            builder: (context, node, properties, children) =>
+            builder: (BuildContext context, LayoutNode node, Map<String, Object?> properties, Map<String, List<Widget>> children) =>
                 const SizedBox.shrink(),
-            definition: WidgetDefinition.fromMap({
-              'properties': {},
-              'bindings': {
-                'data': {'path': 'string'},
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <dynamic, dynamic>{},
+              'bindings': <String, Map<String, String>>{
+                'data': <String, String>{'path': 'string'},
               },
             }),
           ),
@@ -28,47 +28,47 @@ void main() {
         ..register(
           CatalogItem(
             name: 'Text',
-            builder: (context, node, properties, children) {
+            builder: (BuildContext context, LayoutNode node, Map<String, Object?> properties, Map<String, List<Widget>> children) {
               return Text(
                 properties['data'] as String? ?? '',
                 textDirection: TextDirection.ltr,
               );
             },
-            definition: WidgetDefinition.fromMap({
-              'properties': {
-                'data': {'type': 'String'},
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <String, Map<String, String>>{
+                'data': <String, String>{'type': 'String'},
               },
             }),
           ),
         );
-      final catalog = registry.buildCatalog(catalogVersion: '1.0.0');
+      final WidgetCatalog catalog = registry.buildCatalog(catalogVersion: '1.0.0');
 
-      final packet = DynamicUIPacket.fromMap({
+      final DynamicUIPacket packet = DynamicUIPacket.fromMap(<String, Object?>{
         'formatVersion': '1.0.0',
-        'layout': {
+        'layout': <String, Object>{
           'root': 'my_list',
-          'nodes': [
-            {
+          'nodes': <Map<String, Object>>[
+            <String, Object>{
               'id': 'my_list',
               'type': 'ListViewBuilder',
-              'bindings': {
-                'data': {'path': 'items'},
+              'bindings': <String, Map<String, String>>{
+                'data': <String, String>{'path': 'items'},
               },
-              'itemTemplate': {
+              'itemTemplate': <String, Object>{
                 'id': 'item_template',
                 'type': 'Text',
-                'bindings': {
-                  'data': {'path': 'item.name'},
+                'bindings': <String, Map<String, String>>{
+                  'data': <String, String>{'path': 'item.name'},
                 },
               },
             },
           ],
         },
-        'state': {
-          'items': [
-            {'name': 'Apple'},
-            {'name': 'Banana'},
-            {'name': 'Cherry'},
+        'state': <String, List<Map<String, String>>>{
+          'items': <Map<String, String>>[
+            <String, String>{'name': 'Apple'},
+            <String, String>{'name': 'Banana'},
+            <String, String>{'name': 'Cherry'},
           ],
         },
       });
@@ -87,16 +87,16 @@ void main() {
     testWidgets('itemTemplate bindings are resolved correctly', (
       WidgetTester tester,
     ) async {
-      final registry = WidgetCatalogRegistry()
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry()
         ..register(
           CatalogItem(
             name: 'ListViewBuilder',
-            builder: (context, node, properties, children) =>
+            builder: (BuildContext context, LayoutNode node, Map<String, Object?> properties, Map<String, List<Widget>> children) =>
                 const SizedBox.shrink(),
-            definition: WidgetDefinition.fromMap({
-              'properties': {},
-              'bindings': {
-                'data': {'path': 'string'},
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <dynamic, dynamic>{},
+              'bindings': <String, Map<String, String>>{
+                'data': <String, String>{'path': 'string'},
               },
             }),
           ),
@@ -104,45 +104,45 @@ void main() {
         ..register(
           CatalogItem(
             name: 'Text',
-            builder: (context, node, properties, children) {
+            builder: (BuildContext context, LayoutNode node, Map<String, Object?> properties, Map<String, List<Widget>> children) {
               return Text(
                 properties['data'] as String? ?? '',
                 textDirection: TextDirection.ltr,
               );
             },
-            definition: WidgetDefinition.fromMap({
-              'properties': {
-                'data': {'type': 'String'},
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <String, Map<String, String>>{
+                'data': <String, String>{'type': 'String'},
               },
             }),
           ),
         );
-      final catalog = registry.buildCatalog(catalogVersion: '1.0.0');
+      final WidgetCatalog catalog = registry.buildCatalog(catalogVersion: '1.0.0');
 
-      final packet = DynamicUIPacket.fromMap({
+      final DynamicUIPacket packet = DynamicUIPacket.fromMap(<String, Object?>{
         'formatVersion': '1.0.0',
-        'layout': {
+        'layout': <String, Object>{
           'root': 'my_list',
-          'nodes': [
-            {
+          'nodes': <Map<String, Object>>[
+            <String, Object>{
               'id': 'my_list',
               'type': 'ListViewBuilder',
-              'bindings': {
-                'data': {'path': 'items'},
+              'bindings': <String, Map<String, String>>{
+                'data': <String, String>{'path': 'items'},
               },
-              'itemTemplate': {
+              'itemTemplate': <String, Object>{
                 'id': 'item_template',
                 'type': 'Text',
-                'bindings': {
-                  'data': {'path': 'item.name', 'format': 'Fruit: {}'},
+                'bindings': <String, Map<String, String>>{
+                  'data': <String, String>{'path': 'item.name', 'format': 'Fruit: {}'},
                 },
               },
             },
           ],
         },
-        'state': {
-          'items': [
-            {'name': 'Apple'},
+        'state': <String, List<Map<String, String>>>{
+          'items': <Map<String, String>>[
+            <String, String>{'name': 'Apple'},
           ],
         },
       });

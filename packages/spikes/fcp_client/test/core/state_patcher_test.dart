@@ -7,7 +7,6 @@ import 'package:fcp_client/src/core/fcp_state.dart';
 import 'package:fcp_client/src/core/state_patcher.dart';
 import 'package:fcp_client/src/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:json_patch/json_patch.dart';
 
 void main() {
   group('StatePatcher', () {
@@ -16,17 +15,21 @@ void main() {
 
     setUp(() {
       state = FcpState(
-        {
-          'user': {
+        <String, Object?>{
+          'user': <String, Object>{
             'name': 'Alice',
             'email': 'alice@example.com',
-            'details': {'level': 5, 'points': 100},
+            'details': <String, int>{'level': 5, 'points': 100},
           },
-          'tags': ['a', 'b'],
-          'config': {'setting': 'value'},
+          'tags': <String>['a', 'b'],
+          'products': <Map<String, Object>>[
+            <String, Object>{'sku': 'abc-123', 'name': 'Gadget', 'price': 30.0},
+            <String, Object>{'sku': 'def-456', 'name': 'Widget', 'price': 40.0},
+          ],
+          'config': <String, String>{'setting': 'value'},
         },
         validator: DataTypeValidator(),
-        catalog: WidgetCatalog.fromMap({
+        catalog: WidgetCatalog.fromMap(<String, Object?>{
           'catalogVersion': '1.0.0',
           'items': <String, Object?>{},
           'dataTypes': <String, Object?>{},
@@ -35,148 +38,171 @@ void main() {
       patcher = StatePatcher();
     });
 
-    test('applies a "update" operation correctly', () {
-      final update = StateUpdate.fromMap({
-        'patches': [
-          {'op': 'replace', 'path': '/user/name', 'value': 'Bob'},
+    test('applies a "replace" operation correctly', () {
+      final StateUpdate update = StateUpdate(
+        operations: <StateOperation>[
+          PatchOperation(
+            patch: PatchObject(op: 'replace', path: '/user/name', value: 'Bob'),
+          ),
         ],
-      });
+      );
 
       patcher.apply(state, update);
 
       expect(state.getValue('user.name'), 'Bob');
     });
 
-    test('applies an "add" operation to a list', () {
-      final update = StateUpdate.fromMap({
-        'patches': [
-          {'op': 'add', 'path': '/tags/-', 'value': 'c'},
+    test('applies an "add" operation to a map', () {
+      final StateUpdate update = StateUpdate(
+        operations: <StateOperation>[
+          PatchOperation(
+            patch: PatchObject(op: 'add', path: '/user/age', value: 30),
+          ),
         ],
-      });
+      );
 
       patcher.apply(state, update);
 
-      expect(state.getValue('tags'), ['a', 'b', 'c']);
+      expect(state.getValue('user.age'), 30);
     });
 
-    test('applies a "remove" operation from a list', () {
-      final update = StateUpdate.fromMap({
-        'patches': [
-          {'op': 'remove', 'path': '/tags/0'},
+    test('applies a "remove" operation from a map', () {
+      final StateUpdate update = StateUpdate(
+        operations: <StateOperation>[
+          PatchOperation(
+            patch: PatchObject(op: 'remove', path: '/user/email'),
+          ),
         ],
-      });
+      );
 
       patcher.apply(state, update);
 
-      expect(state.getValue('tags'), ['b']);
+      expect(state.getValue('user.email'), isNull);
     });
 
-    test('applies a "copy" operation', () {
-      final update = StateUpdate.fromMap({
-        'patches': [
-          {'op': 'copy', 'from': '/user/name', 'path': '/user/alias'},
+    test('applies a "listAppend" operation', () {
+      final StateUpdate update = StateUpdate(
+        operations: <StateOperation>[
+          const ListAppendOperation(
+            path: '/tags',
+            items: <Map<String, Object?>>[
+              <String, Object?>{'value': 'c'},
+              <String, Object?>{'value': 'd'},
+            ],
+          ),
         ],
-      });
+      );
       patcher.apply(state, update);
-      expect(state.getValue('user.alias'), 'Alice');
+      expect(state.getValue('tags'), <Object>[
+        'a',
+        'b',
+        'c',
+        'd',
+      ]);
     });
 
-    test('applies a "move" operation', () {
-      final update = StateUpdate.fromMap({
-        'patches': [
-          {'op': 'move', 'from': '/config', 'path': '/user/config'},
+    test('applies a "listRemove" operation', () {
+      final StateUpdate update = StateUpdate(
+        operations: <StateOperation>[
+          const ListRemoveOperation(
+            path: '/products',
+            itemKey: 'sku',
+            keys: <Object?>['abc-123'],
+          ),
         ],
-      });
+      );
       patcher.apply(state, update);
-      expect(state.getValue('config'), isNull);
-      expect(state.getValue('user.config'), {'setting': 'value'});
+      final List<Object?> products =
+          state.getValue('products') as List<Object?>;
+      expect(products.length, 1);
+      expect((products[0] as Map<String, Object?>)['sku'], 'def-456');
     });
 
-    test('applies a "test" operation successfully', () {
-      final update = StateUpdate.fromMap({
-        'patches': [
-          {'op': 'test', 'path': '/user/name', 'value': 'Alice'},
+    test('applies a "listUpdate" operation', () {
+      final StateUpdate update = StateUpdate(
+        operations: <StateOperation>[
+          const ListUpdateOperation(
+            path: '/products',
+            itemKey: 'sku',
+            items: <Map<String, Object?>>[
+              <String, Object?>{
+                'sku': 'abc-123',
+                'name': 'Updated Gadget',
+                'price': 35.0,
+              },
+            ],
+          ),
         ],
-      });
-      // Should not throw
+      );
       patcher.apply(state, update);
+      final List<Object?> products =
+          state.getValue('products') as List<Object?>;
+      final Map<String, Object?> item =
+          products.firstWhere(
+                (Object? p) => (p as Map<String, Object?>)['sku'] == 'abc-123',
+              )
+              as Map<String, Object?>;
+      expect(item['name'], 'Updated Gadget');
+      expect(item['price'], 35.0);
     });
-
-    test(
-      'throws JsonPatchTestFailedException for a failing "test" operation',
-      () {
-        final update = StateUpdate.fromMap({
-          'patches': [
-            {'op': 'test', 'path': '/user/name', 'value': 'WrongValue'},
-          ],
-        });
-        expect(
-          () => patcher.apply(state, update),
-          throwsA(isA<JsonPatchTestFailedException>()),
-        );
-      },
-    );
 
     test('applies patch to a deeply nested property', () {
-      final update = StateUpdate.fromMap({
-        'patches': [
-          {'op': 'replace', 'path': '/user/details/points', 'value': 150},
+      final StateUpdate update = StateUpdate(
+        operations: <StateOperation>[
+          PatchOperation(
+            patch: PatchObject(
+              op: 'replace',
+              path: '/user/details/points',
+              value: 150,
+            ),
+          ),
         ],
-      });
+      );
       patcher.apply(state, update);
       expect(state.getValue('user.details.points'), 150);
     });
 
-    test('throws JsonPatchError for invalid path in "replace"', () {
-      final update = StateUpdate.fromMap({
-        'patches': [
-          {'op': 'replace', 'path': '/user/nonexistent/path', 'value': 'new'},
-        ],
-      });
-      expect(
-        () => patcher.apply(state, update),
-        throwsA(isA<JsonPatchError>()),
-      );
-    });
-
-    test('throws JsonPatchError for invalid path in "remove"', () {
-      final update = StateUpdate.fromMap({
-        'patches': [
-          {'op': 'remove', 'path': '/nonexistent'},
-        ],
-      });
-      expect(
-        () => patcher.apply(state, update),
-        throwsA(isA<JsonPatchError>()),
-      );
-    });
-
     test('applies multiple operations', () {
-      final update = StateUpdate.fromMap({
-        'patches': [
-          {'op': 'replace', 'path': '/user/email', 'value': 'new@example.com'},
-          {'op': 'add', 'path': '/user/age', 'value': 30},
+      final StateUpdate update = StateUpdate(
+        operations: <StateOperation>[
+          PatchOperation(
+            patch: PatchObject(
+              op: 'replace',
+              path: '/user/email',
+              value: 'new@example.com',
+            ),
+          ),
+          PatchOperation(
+            patch: PatchObject(op: 'add', path: '/user/age', value: 30),
+          ),
         ],
-      });
+      );
 
       patcher.apply(state, update);
 
-      final user = state.getValue('user') as Map;
+      final Map<String, Object?> user =
+          state.getValue('user') as Map<String, Object?>;
       expect(user['email'], 'new@example.com');
       expect(user['age'], 30);
     });
 
     test('notifies listeners after applying patch', () {
-      var notified = false;
+      bool notified = false;
       state.addListener(() {
         notified = true;
       });
 
-      final update = StateUpdate.fromMap({
-        'patches': [
-          {'op': 'replace', 'path': '/user/name', 'value': 'Charlie'},
+      final StateUpdate update = StateUpdate(
+        operations: <StateOperation>[
+          PatchOperation(
+            patch: PatchObject(
+              op: 'replace',
+              path: '/user/name',
+              value: 'Charlie',
+            ),
+          ),
         ],
-      });
+      );
 
       patcher.apply(state, update);
 

@@ -8,21 +8,21 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('FcpView Error Handling', () {
-    testWidgets('displays error for cyclical layout', (tester) async {
-      final packet = DynamicUIPacket.fromMap({
+    testWidgets('displays error for cyclical layout', (WidgetTester tester) async {
+      final DynamicUIPacket packet = DynamicUIPacket.fromMap(<String, Object?>{
         'formatVersion': '1.0.0',
-        'layout': {
+        'layout': <String, Object>{
           'root': 'node_a',
-          'nodes': [
-            {
+          'nodes': <Map<String, Object>>[
+            <String, Object>{
               'id': 'node_a',
               'type': 'Container', // This type is not in the test catalog
-              'properties': {'child': 'node_b'},
+              'properties': <String, String>{'child': 'node_b'},
             },
-            {
+            <String, Object>{
               'id': 'node_b',
               'type': 'Container',
-              'properties': {'child': 'node_a'},
+              'properties': <String, String>{'child': 'node_a'},
             },
           ],
         },
@@ -30,20 +30,20 @@ void main() {
       });
 
       // We need a registry that has Container to test the cycle
-      final cycleRegistry = WidgetCatalogRegistry()
+      final WidgetCatalogRegistry cycleRegistry = WidgetCatalogRegistry()
         ..register(
           CatalogItem(
             name: 'Container',
-            builder: (context, node, properties, children) =>
+            builder: (BuildContext context, LayoutNode node, Map<String, Object?> properties, Map<String, List<Widget>> children) =>
                 Container(child: children['child']?.first),
-            definition: WidgetDefinition.fromMap({
-              'properties': {
-                'child': {'type': 'WidgetId'},
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <String, Map<String, String>>{
+                'child': <String, String>{'type': 'WidgetId'},
               },
             }),
           ),
         );
-      final cycleCatalog = cycleRegistry.buildCatalog(catalogVersion: '1.0.0');
+      final WidgetCatalog cycleCatalog = cycleRegistry.buildCatalog(catalogVersion: '1.0.0');
 
       await tester.pumpWidget(
         MaterialApp(

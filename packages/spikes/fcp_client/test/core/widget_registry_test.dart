@@ -9,12 +9,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('WidgetCatalogRegistry', () {
-    final testDefinition = WidgetDefinition.fromMap({
+    final WidgetDefinition testDefinition = WidgetDefinition.fromMap(<String, Object?>{
       'properties': <String, Object?>{},
     });
 
     test('registering and retrieving a builder', () {
-      final registry = WidgetCatalogRegistry();
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry();
       Widget testBuilder(
         BuildContext context,
         LayoutNode node,
@@ -30,19 +30,19 @@ void main() {
         ),
       );
 
-      final retrievedBuilder = registry.getBuilder('TestWidget');
+      final CatalogWidgetBuilder? retrievedBuilder = registry.getBuilder('TestWidget');
       expect(retrievedBuilder, isNotNull);
       expect(retrievedBuilder, equals(testBuilder));
     });
 
     test('retrieving a non-existent builder returns null', () {
-      final registry = WidgetCatalogRegistry();
-      final retrievedBuilder = registry.getBuilder('NonExistentWidget');
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry();
+      final CatalogWidgetBuilder? retrievedBuilder = registry.getBuilder('NonExistentWidget');
       expect(retrievedBuilder, isNull);
     });
 
     test('overwriting an existing builder', () {
-      final registry = WidgetCatalogRegistry();
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry();
       Widget builder1(
         BuildContext context,
         LayoutNode node,
@@ -63,7 +63,7 @@ void main() {
           definition: testDefinition,
         ),
       );
-      final retrievedBuilder1 = registry.getBuilder('TestWidget');
+      final CatalogWidgetBuilder? retrievedBuilder1 = registry.getBuilder('TestWidget');
       expect(retrievedBuilder1, equals(builder1));
 
       registry.register(
@@ -73,12 +73,12 @@ void main() {
           definition: testDefinition,
         ),
       );
-      final retrievedBuilder2 = registry.getBuilder('TestWidget');
+      final CatalogWidgetBuilder? retrievedBuilder2 = registry.getBuilder('TestWidget');
       expect(retrievedBuilder2, equals(builder2));
     });
 
     test('hasBuilder returns correct value', () {
-      final registry = WidgetCatalogRegistry();
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry();
       Widget testBuilder(
         BuildContext context,
         LayoutNode node,

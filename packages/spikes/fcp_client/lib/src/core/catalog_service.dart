@@ -21,7 +21,7 @@ class CatalogService {
   ///
   /// Throws a [FormatException] if the JSON is invalid.
   WidgetCatalog parse(String jsonString) {
-    final jsonMap = json.decode(jsonString) as Map<String, Object?>;
+    final Map<String, Object?> jsonMap = json.decode(jsonString) as Map<String, Object?>;
     // Add validation against the JSON schema from the FCP document.
     if (jsonMap['catalogVersion'] is! String) {
       throw const FormatException(
@@ -46,7 +46,7 @@ class CatalogService {
   /// The file at [assetPath] is expected to be a valid JSON file that conforms
   /// to the WidgetCatalog schema.
   Future<WidgetCatalog> loadFromAssets(String assetPath) async {
-    final jsonString = await rootBundle.loadString(assetPath);
+    final String jsonString = await rootBundle.loadString(assetPath);
     return parse(jsonString);
   }
 }

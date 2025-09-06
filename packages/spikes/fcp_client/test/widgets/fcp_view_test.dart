@@ -10,35 +10,43 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('FcpView', () {
     testWidgets('renders a simple static UI', (WidgetTester tester) async {
-      final registry = WidgetCatalogRegistry()
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry()
         ..register(
           CatalogItem(
             name: 'Text',
-            builder: (context, node, properties, children) {
-              return Text(
-                properties['data'] as String? ?? '',
-                textDirection: TextDirection.ltr,
-              );
-            },
-            definition: WidgetDefinition.fromMap({
-              'properties': {
-                'data': {'type': 'String'},
+            builder:
+                (
+                  BuildContext context,
+                  LayoutNode node,
+                  Map<String, Object?> properties,
+                  Map<String, List<Widget>> children,
+                ) {
+                  return Text(
+                    properties['data'] as String? ?? '',
+                    textDirection: TextDirection.ltr,
+                  );
+                },
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <String, Map<String, String>>{
+                'data': <String, String>{'type': 'String'},
               },
             }),
           ),
         );
 
-      final catalog = registry.buildCatalog(catalogVersion: '1.0.0');
+      final WidgetCatalog catalog = registry.buildCatalog(
+        catalogVersion: '1.0.0',
+      );
 
-      final packet = DynamicUIPacket.fromMap({
+      final DynamicUIPacket packet = DynamicUIPacket.fromMap(<String, Object?>{
         'formatVersion': '1.0.0',
-        'layout': {
+        'layout': <String, Object>{
           'root': 'hello',
-          'nodes': [
-            {
+          'nodes': <Map<String, Object>>[
+            <String, Object>{
               'id': 'hello',
               'type': 'Text',
-              'properties': {'data': 'Hello, FCP!'},
+              'properties': <String, String>{'data': 'Hello, FCP!'},
             },
           ],
         },
@@ -55,19 +63,25 @@ void main() {
     });
 
     testWidgets('renders a nested UI', (WidgetTester tester) async {
-      final registry = WidgetCatalogRegistry()
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry()
         ..register(
           CatalogItem(
             name: 'Text',
-            builder: (context, node, properties, children) {
-              return Text(
-                properties['data'] as String? ?? '',
-                textDirection: TextDirection.ltr,
-              );
-            },
-            definition: WidgetDefinition.fromMap({
-              'properties': {
-                'data': {'type': 'String'},
+            builder:
+                (
+                  BuildContext context,
+                  LayoutNode node,
+                  Map<String, Object?> properties,
+                  Map<String, List<Widget>> children,
+                ) {
+                  return Text(
+                    properties['data'] as String? ?? '',
+                    textDirection: TextDirection.ltr,
+                  );
+                },
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <String, Map<String, String>>{
+                'data': <String, String>{'type': 'String'},
               },
             }),
           ),
@@ -75,40 +89,48 @@ void main() {
         ..register(
           CatalogItem(
             name: 'Column',
-            builder: (context, node, properties, children) {
-              return Column(children: children['children'] ?? []);
-            },
-            definition: WidgetDefinition.fromMap({
-              'properties': {
-                'children': {'type': 'ListOfWidgetIds'},
+            builder:
+                (
+                  BuildContext context,
+                  LayoutNode node,
+                  Map<String, Object?> properties,
+                  Map<String, List<Widget>> children,
+                ) {
+                  return Column(children: children['children'] ?? <Widget>[]);
+                },
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <String, Map<String, String>>{
+                'children': <String, String>{'type': 'ListOfWidgetIds'},
               },
             }),
           ),
         );
 
-      final catalog = registry.buildCatalog(catalogVersion: '1.0.0');
+      final WidgetCatalog catalog = registry.buildCatalog(
+        catalogVersion: '1.0.0',
+      );
 
-      final packet = DynamicUIPacket.fromMap({
+      final DynamicUIPacket packet = DynamicUIPacket.fromMap(<String, Object?>{
         'formatVersion': '1.0.0',
-        'layout': {
+        'layout': <String, Object>{
           'root': 'col',
-          'nodes': [
-            {
+          'nodes': <Map<String, Object>>[
+            <String, Object>{
               'id': 'col',
               'type': 'Column',
-              'properties': {
-                'children': ['text1', 'text2'],
+              'properties': <String, List<String>>{
+                'children': <String>['text1', 'text2'],
               },
             },
-            {
+            <String, Object>{
               'id': 'text1',
               'type': 'Text',
-              'properties': {'data': 'Line 1'},
+              'properties': <String, String>{'data': 'Line 1'},
             },
-            {
+            <String, Object>{
               'id': 'text2',
               'type': 'Text',
-              'properties': {'data': 'Line 2'},
+              'properties': <String, String>{'data': 'Line 2'},
             },
           ],
         },
@@ -128,14 +150,16 @@ void main() {
     testWidgets('displays an error for an unknown widget type', (
       WidgetTester tester,
     ) async {
-      final registry = WidgetCatalogRegistry();
-      final catalog = registry.buildCatalog(catalogVersion: '1.0.0');
-      final packet = DynamicUIPacket.fromMap({
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry();
+      final WidgetCatalog catalog = registry.buildCatalog(
+        catalogVersion: '1.0.0',
+      );
+      final DynamicUIPacket packet = DynamicUIPacket.fromMap(<String, Object?>{
         'formatVersion': '1.0.0',
-        'layout': {
+        'layout': <String, Object>{
           'root': 'unknown',
-          'nodes': [
-            {'id': 'unknown', 'type': 'MyBogusWidget'},
+          'nodes': <Map<String, String>>[
+            <String, String>{'id': 'unknown', 'type': 'MyBogusWidget'},
           ],
         },
         'state': <String, Object?>{},
@@ -153,59 +177,73 @@ void main() {
     testWidgets('rebuilds when a new packet is provided', (
       WidgetTester tester,
     ) async {
-      final registry = WidgetCatalogRegistry()
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry()
         ..register(
           CatalogItem(
             name: 'Text',
-            builder: (context, node, properties, children) {
-              return Text(
-                properties['data'] as String? ?? '',
-                textDirection: TextDirection.ltr,
-              );
-            },
+            builder:
+                (
+                  BuildContext context,
+                  LayoutNode node,
+                  Map<String, Object?> properties,
+                  Map<String, List<Widget>> children,
+                ) {
+                  return Text(
+                    properties['data'] as String? ?? '',
+                    textDirection: TextDirection.ltr,
+                  );
+                },
             definition: WidgetDefinition(
-              properties: ObjectSchema(properties: {'data': Schema.string()}),
+              properties: ObjectSchema(
+                properties: <String, Schema>{'data': Schema.string()},
+              ),
               events: ObjectSchema(
-                properties: {
+                properties: <String, Schema>{
                   'onChanged': Schema.object(
-                    properties: {'data': Schema.boolean()},
+                    properties: <String, Schema>{'data': Schema.boolean()},
                   ),
                 },
               ),
             ),
           ),
         );
-      final catalog = registry.buildCatalog(catalogVersion: '1.0.0');
+      final WidgetCatalog catalog = registry.buildCatalog(
+        catalogVersion: '1.0.0',
+      );
 
-      final initialPacket = DynamicUIPacket.fromMap({
-        'formatVersion': '1.0.0',
-        'layout': {
-          'root': 'text',
-          'nodes': [
-            {
-              'id': 'text',
-              'type': 'Text',
-              'properties': {'data': 'Initial'},
-            },
-          ],
+      final DynamicUIPacket initialPacket = DynamicUIPacket.fromMap(
+        <String, Object?>{
+          'formatVersion': '1.0.0',
+          'layout': <String, Object>{
+            'root': 'text',
+            'nodes': <Map<String, Object>>[
+              <String, Object>{
+                'id': 'text',
+                'type': 'Text',
+                'properties': <String, String>{'data': 'Initial'},
+              },
+            ],
+          },
+          'state': <String, Object?>{},
         },
-        'state': <String, Object?>{},
-      });
+      );
 
-      final newPacket = DynamicUIPacket.fromMap({
-        'formatVersion': '1.0.0',
-        'layout': {
-          'root': 'text',
-          'nodes': [
-            {
-              'id': 'text',
-              'type': 'Text',
-              'properties': {'data': 'Updated'},
-            },
-          ],
+      final DynamicUIPacket newPacket = DynamicUIPacket.fromMap(
+        <String, Object?>{
+          'formatVersion': '1.0.0',
+          'layout': <String, Object>{
+            'root': 'text',
+            'nodes': <Map<String, Object>>[
+              <String, Object>{
+                'id': 'text',
+                'type': 'Text',
+                'properties': <String, String>{'data': 'Updated'},
+              },
+            ],
+          },
+          'state': <String, Object?>{},
         },
-        'state': <String, Object?>{},
-      });
+      );
 
       await tester.pumpWidget(
         MaterialApp(
@@ -235,35 +273,43 @@ void main() {
 
   group('FcpView State and Bindings', () {
     testWidgets('renders UI with bound state', (WidgetTester tester) async {
-      final registry = WidgetCatalogRegistry()
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry()
         ..register(
           CatalogItem(
             name: 'Text',
-            builder: (context, node, properties, children) {
-              return Text(
-                properties['data'] as String? ?? '',
-                textDirection: TextDirection.ltr,
-              );
-            },
-            definition: WidgetDefinition.fromMap({
-              'properties': {
-                'data': {'type': 'String'},
+            builder:
+                (
+                  BuildContext context,
+                  LayoutNode node,
+                  Map<String, Object?> properties,
+                  Map<String, List<Widget>> children,
+                ) {
+                  return Text(
+                    properties['data'] as String? ?? '',
+                    textDirection: TextDirection.ltr,
+                  );
+                },
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <String, Map<String, String>>{
+                'data': <String, String>{'type': 'String'},
               },
             }),
           ),
         );
-      final catalog = registry.buildCatalog(catalogVersion: '1.0.0');
+      final WidgetCatalog catalog = registry.buildCatalog(
+        catalogVersion: '1.0.0',
+      );
 
-      final packet = DynamicUIPacket.fromMap({
+      final DynamicUIPacket packet = DynamicUIPacket.fromMap(<String, Object?>{
         'formatVersion': '1.0.0',
-        'layout': {
+        'layout': <String, Object>{
           'root': 'text',
-          'nodes': [
-            {
+          'nodes': <Map<String, Object>>[
+            <String, Object>{
               'id': 'text',
               'type': 'Text',
-              'bindings': {
-                'data': {'path': 'message'},
+              'bindings': <String, Map<String, String>>{
+                'data': <String, String>{'path': 'message'},
               },
             },
           ],
@@ -283,36 +329,44 @@ void main() {
     testWidgets('UI updates when state changes via controller', (
       WidgetTester tester,
     ) async {
-      final registry = WidgetCatalogRegistry()
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry()
         ..register(
           CatalogItem(
             name: 'Text',
-            builder: (context, node, properties, children) {
-              return Text(
-                properties['data'] as String? ?? '',
-                textDirection: TextDirection.ltr,
-              );
-            },
-            definition: WidgetDefinition.fromMap({
-              'properties': {
-                'data': {'type': 'String'},
+            builder:
+                (
+                  BuildContext context,
+                  LayoutNode node,
+                  Map<String, Object?> properties,
+                  Map<String, List<Widget>> children,
+                ) {
+                  return Text(
+                    properties['data'] as String? ?? '',
+                    textDirection: TextDirection.ltr,
+                  );
+                },
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <String, Map<String, String>>{
+                'data': <String, String>{'type': 'String'},
               },
             }),
           ),
         );
-      final catalog = registry.buildCatalog(catalogVersion: '1.0.0');
-      final controller = FcpViewController();
+      final WidgetCatalog catalog = registry.buildCatalog(
+        catalogVersion: '1.0.0',
+      );
+      final FcpViewController controller = FcpViewController();
 
-      final packet = DynamicUIPacket.fromMap({
+      final DynamicUIPacket packet = DynamicUIPacket.fromMap(<String, Object?>{
         'formatVersion': '1.0.0',
-        'layout': {
+        'layout': <String, Object>{
           'root': 'text',
-          'nodes': [
-            {
+          'nodes': <Map<String, Object>>[
+            <String, Object>{
               'id': 'text',
               'type': 'Text',
-              'bindings': {
-                'data': {'path': 'message'},
+              'bindings': <String, Map<String, String>>{
+                'data': <String, String>{'path': 'message'},
               },
             },
           ],
@@ -335,9 +389,13 @@ void main() {
 
       // Act
       controller.patchState(
-        StateUpdate.fromMap({
-          'patches': [
-            {'op': 'replace', 'path': '/message', 'value': 'Updated'},
+        StateUpdate.fromMap(<String, Object?>{
+          'patches': <Map<String, String>>[
+            <String, String>{
+              'op': 'replace',
+              'path': '/message',
+              'value': 'Updated',
+            },
           ],
         }),
       );
@@ -355,45 +413,53 @@ void main() {
     ) async {
       EventPayload? capturedPayload;
 
-      final registry = WidgetCatalogRegistry()
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry()
         ..register(
           CatalogItem(
             name: 'EventButton',
-            builder: (context, node, properties, children) {
-              return ElevatedButton(
-                onPressed: () {
-                  FcpProvider.of(context)?.onEvent?.call(
-                    EventPayload.fromMap({
-                      'sourceNodeId': node.id,
-                      'eventName': 'onPressed',
-                      'arguments': <String, Object?>{'test': 'data'},
-                    }),
+            builder:
+                (
+                  BuildContext context,
+                  LayoutNode node,
+                  Map<String, Object?> properties,
+                  Map<String, List<Widget>> children,
+                ) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      FcpProvider.of(context)?.onEvent?.call(
+                        EventPayload.fromMap(<String, Object?>{
+                          'sourceNodeId': node.id,
+                          'eventName': 'onPressed',
+                          'arguments': <String, Object?>{'test': 'data'},
+                        }),
+                      );
+                    },
+                    child: const Text('Tap Me'),
                   );
                 },
-                child: const Text('Tap Me'),
-              );
-            },
-            definition: WidgetDefinition.fromMap({
+            definition: WidgetDefinition.fromMap(<String, Object?>{
               'properties': <String, Object?>{},
-              'events': {
-                'onPressed': {
+              'events': <String, Map<String, Object>>{
+                'onPressed': <String, Object>{
                   'type': 'object',
-                  'properties': {
-                    'test': {'type': 'String'},
+                  'properties': <String, Map<String, String>>{
+                    'test': <String, String>{'type': 'String'},
                   },
                 },
               },
             }),
           ),
         );
-      final catalog = registry.buildCatalog(catalogVersion: '1.0.0');
+      final WidgetCatalog catalog = registry.buildCatalog(
+        catalogVersion: '1.0.0',
+      );
 
-      final packet = DynamicUIPacket.fromMap({
+      final DynamicUIPacket packet = DynamicUIPacket.fromMap(<String, Object?>{
         'formatVersion': '1.0.0',
-        'layout': {
+        'layout': <String, Object>{
           'root': 'button',
-          'nodes': [
-            {'id': 'button', 'type': 'EventButton'},
+          'nodes': <Map<String, String>>[
+            <String, String>{'id': 'button', 'type': 'EventButton'},
           ],
         },
         'state': <String, Object?>{},
@@ -405,7 +471,7 @@ void main() {
             packet: packet,
             catalog: catalog,
             registry: registry,
-            onEvent: (payload) {
+            onEvent: (EventPayload payload) {
               capturedPayload = payload;
             },
           ),
@@ -418,23 +484,29 @@ void main() {
       expect(capturedPayload, isNotNull);
       expect(capturedPayload!.sourceNodeId, 'button');
       expect(capturedPayload!.eventName, 'onPressed');
-      expect(capturedPayload!.arguments, {'test': 'data'});
+      expect(capturedPayload!.arguments, <String, String>{'test': 'data'});
     });
   });
 
   group('FcpView Layout Updates', () {
     testWidgets('adds a widget with LayoutUpdate', (WidgetTester tester) async {
-      final controller = FcpViewController();
-      final registry = WidgetCatalogRegistry()
+      final FcpViewController controller = FcpViewController();
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry()
         ..register(
           CatalogItem(
             name: 'Column',
-            builder: (context, node, properties, children) {
-              return Column(children: children['children'] ?? []);
-            },
-            definition: WidgetDefinition.fromMap({
-              'properties': {
-                'children': {'type': 'ListOfWidgetIds'},
+            builder:
+                (
+                  BuildContext context,
+                  LayoutNode node,
+                  Map<String, Object?> properties,
+                  Map<String, List<Widget>> children,
+                ) {
+                  return Column(children: children['children'] ?? <Widget>[]);
+                },
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <String, Map<String, String>>{
+                'children': <String, String>{'type': 'ListOfWidgetIds'},
               },
             }),
           ),
@@ -442,37 +514,45 @@ void main() {
         ..register(
           CatalogItem(
             name: 'Text',
-            builder: (context, node, properties, children) {
-              return Text(
-                properties['data'] as String? ?? '',
-                textDirection: TextDirection.ltr,
-              );
-            },
-            definition: WidgetDefinition.fromMap({
-              'properties': {
-                'data': {'type': 'String'},
+            builder:
+                (
+                  BuildContext context,
+                  LayoutNode node,
+                  Map<String, Object?> properties,
+                  Map<String, List<Widget>> children,
+                ) {
+                  return Text(
+                    properties['data'] as String? ?? '',
+                    textDirection: TextDirection.ltr,
+                  );
+                },
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <String, Map<String, String>>{
+                'data': <String, String>{'type': 'String'},
               },
             }),
           ),
         );
-      final catalog = registry.buildCatalog(catalogVersion: '1.0.0');
+      final WidgetCatalog catalog = registry.buildCatalog(
+        catalogVersion: '1.0.0',
+      );
 
-      final packet = DynamicUIPacket.fromMap({
+      final DynamicUIPacket packet = DynamicUIPacket.fromMap(<String, Object?>{
         'formatVersion': '1.0.0',
-        'layout': {
+        'layout': <String, Object>{
           'root': 'col',
-          'nodes': [
-            {
+          'nodes': <Map<String, Object>>[
+            <String, Object>{
               'id': 'col',
               'type': 'Column',
-              'properties': {
-                'children': ['text1'],
+              'properties': <String, List<String>>{
+                'children': <String>['text1'],
               },
             },
-            {
+            <String, Object>{
               'id': 'text1',
               'type': 'Text',
-              'properties': {'data': 'First'},
+              'properties': <String, String>{'data': 'First'},
             },
           ],
         },
@@ -495,26 +575,26 @@ void main() {
 
       // Act
       controller.patchLayout(
-        LayoutUpdate.fromMap({
-          'operations': [
-            {
+        LayoutUpdate.fromMap(<String, Object?>{
+          'operations': <Map<String, Object>>[
+            <String, Object>{
               'op': 'add',
-              'nodes': [
-                {
+              'nodes': <Map<String, Object>>[
+                <String, Object>{
                   'id': 'text2',
                   'type': 'Text',
-                  'properties': {'data': 'Second'},
+                  'properties': <String, String>{'data': 'Second'},
                 },
               ],
             },
-            {
+            <String, Object>{
               'op': 'replace',
-              'nodes': [
-                {
+              'nodes': <Map<String, Object>>[
+                <String, Object>{
                   'id': 'col',
                   'type': 'Column',
-                  'properties': {
-                    'children': ['text1', 'text2'],
+                  'properties': <String, List<String>>{
+                    'children': <String>['text1', 'text2'],
                   },
                 },
               ],
@@ -532,17 +612,23 @@ void main() {
     testWidgets('removes a widget with LayoutUpdate', (
       WidgetTester tester,
     ) async {
-      final controller = FcpViewController();
-      final registry = WidgetCatalogRegistry()
+      final FcpViewController controller = FcpViewController();
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry()
         ..register(
           CatalogItem(
             name: 'Column',
-            builder: (context, node, properties, children) {
-              return Column(children: children['children'] ?? []);
-            },
-            definition: WidgetDefinition.fromMap({
-              'properties': {
-                'children': {'type': 'ListOfWidgetIds'},
+            builder:
+                (
+                  BuildContext context,
+                  LayoutNode node,
+                  Map<String, Object?> properties,
+                  Map<String, List<Widget>> children,
+                ) {
+                  return Column(children: children['children'] ?? <Widget>[]);
+                },
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <String, Map<String, String>>{
+                'children': <String, String>{'type': 'ListOfWidgetIds'},
               },
             }),
           ),
@@ -550,42 +636,50 @@ void main() {
         ..register(
           CatalogItem(
             name: 'Text',
-            builder: (context, node, properties, children) {
-              return Text(
-                properties['data'] as String? ?? '',
-                textDirection: TextDirection.ltr,
-              );
-            },
-            definition: WidgetDefinition.fromMap({
-              'properties': {
-                'data': {'type': 'String'},
+            builder:
+                (
+                  BuildContext context,
+                  LayoutNode node,
+                  Map<String, Object?> properties,
+                  Map<String, List<Widget>> children,
+                ) {
+                  return Text(
+                    properties['data'] as String? ?? '',
+                    textDirection: TextDirection.ltr,
+                  );
+                },
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <String, Map<String, String>>{
+                'data': <String, String>{'type': 'String'},
               },
             }),
           ),
         );
-      final catalog = registry.buildCatalog(catalogVersion: '1.0.0');
+      final WidgetCatalog catalog = registry.buildCatalog(
+        catalogVersion: '1.0.0',
+      );
 
-      final packet = DynamicUIPacket.fromMap({
+      final DynamicUIPacket packet = DynamicUIPacket.fromMap(<String, Object?>{
         'formatVersion': '1.0.0',
-        'layout': {
+        'layout': <String, Object>{
           'root': 'col',
-          'nodes': [
-            {
+          'nodes': <Map<String, Object>>[
+            <String, Object>{
               'id': 'col',
               'type': 'Column',
-              'properties': {
-                'children': ['text1', 'text2'],
+              'properties': <String, List<String>>{
+                'children': <String>['text1', 'text2'],
               },
             },
-            {
+            <String, Object>{
               'id': 'text1',
               'type': 'Text',
-              'properties': {'data': 'First'},
+              'properties': <String, String>{'data': 'First'},
             },
-            {
+            <String, Object>{
               'id': 'text2',
               'type': 'Text',
-              'properties': {'data': 'Second'},
+              'properties': <String, String>{'data': 'Second'},
             },
           ],
         },
@@ -608,20 +702,20 @@ void main() {
 
       // Act
       controller.patchLayout(
-        LayoutUpdate.fromMap({
-          'operations': [
-            {
+        LayoutUpdate.fromMap(<String, Object?>{
+          'operations': <Map<String, Object>>[
+            <String, Object>{
               'op': 'remove',
-              'nodeIds': ['text2'],
+              'nodeIds': <String>['text2'],
             },
-            {
+            <String, Object>{
               'op': 'replace',
-              'nodes': [
-                {
+              'nodes': <Map<String, Object>>[
+                <String, Object>{
                   'id': 'col',
                   'type': 'Column',
-                  'properties': {
-                    'children': ['text1'],
+                  'properties': <String, List<String>>{
+                    'children': <String>['text1'],
                   },
                 },
               ],
@@ -639,35 +733,43 @@ void main() {
     testWidgets('updates a widget with LayoutUpdate', (
       WidgetTester tester,
     ) async {
-      final controller = FcpViewController();
-      final registry = WidgetCatalogRegistry()
+      final FcpViewController controller = FcpViewController();
+      final WidgetCatalogRegistry registry = WidgetCatalogRegistry()
         ..register(
           CatalogItem(
             name: 'Text',
-            builder: (context, node, properties, children) {
-              return Text(
-                properties['data'] as String? ?? '',
-                textDirection: TextDirection.ltr,
-              );
-            },
-            definition: WidgetDefinition.fromMap({
-              'properties': {
-                'data': {'type': 'String'},
+            builder:
+                (
+                  BuildContext context,
+                  LayoutNode node,
+                  Map<String, Object?> properties,
+                  Map<String, List<Widget>> children,
+                ) {
+                  return Text(
+                    properties['data'] as String? ?? '',
+                    textDirection: TextDirection.ltr,
+                  );
+                },
+            definition: WidgetDefinition.fromMap(<String, Object?>{
+              'properties': <String, Map<String, String>>{
+                'data': <String, String>{'type': 'String'},
               },
             }),
           ),
         );
-      final catalog = registry.buildCatalog(catalogVersion: '1.0.0');
+      final WidgetCatalog catalog = registry.buildCatalog(
+        catalogVersion: '1.0.0',
+      );
 
-      final packet = DynamicUIPacket.fromMap({
+      final DynamicUIPacket packet = DynamicUIPacket.fromMap(<String, Object?>{
         'formatVersion': '1.0.0',
-        'layout': {
+        'layout': <String, Object>{
           'root': 'text1',
-          'nodes': [
-            {
+          'nodes': <Map<String, Object>>[
+            <String, Object>{
               'id': 'text1',
               'type': 'Text',
-              'properties': {'data': 'Before'},
+              'properties': <String, String>{'data': 'Before'},
             },
           ],
         },
@@ -690,15 +792,15 @@ void main() {
 
       // Act
       controller.patchLayout(
-        LayoutUpdate.fromMap({
-          'operations': [
-            {
+        LayoutUpdate.fromMap(<String, Object?>{
+          'operations': <Map<String, Object>>[
+            <String, Object>{
               'op': 'replace',
-              'nodes': [
-                {
+              'nodes': <Map<String, Object>>[
+                <String, Object>{
                   'id': 'text1',
                   'type': 'Text',
-                  'properties': {'data': 'After'},
+                  'properties': <String, String>{'data': 'After'},
                 },
               ],
             },

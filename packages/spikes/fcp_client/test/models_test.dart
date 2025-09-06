@@ -11,23 +11,23 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('FCP Models', () {
     test('WidgetCatalog correctly parsed', () {
-      final catalog = WidgetCatalog.fromMap(catalogJson);
+      final WidgetCatalog catalog = WidgetCatalog.fromMap(catalogJson);
       expect(catalog.catalogVersion, '1.0.0');
       expect(catalog.items, isA<Map>());
       expect(catalog.items.keys, contains('Text'));
     });
 
     test('WidgetDefinition correctly parsed', () {
-      final items = catalogJson['items']! as Map<String, Object?>;
-      final textItem = items['Text']! as Map<String, Object?>;
-      final itemDef = WidgetDefinition.fromMap(textItem);
+      final Map<String, Object?> items = catalogJson['items']! as Map<String, Object?>;
+      final Map<String, Object?> textItem = items['Text']! as Map<String, Object?>;
+      final WidgetDefinition itemDef = WidgetDefinition.fromMap(textItem);
       expect(itemDef.properties, isA<ObjectSchema>());
       expect(itemDef.properties.value, contains('data'));
       expect(itemDef.events, isNull);
     });
 
     test('DynamicUIPacket correctly parsed', () {
-      final packet = DynamicUIPacket.fromMap(packetJson);
+      final DynamicUIPacket packet = DynamicUIPacket.fromMap(packetJson);
       expect(packet.formatVersion, '1.0.0');
       expect(packet.layout, isA<Layout>());
       expect(packet.state, isA<Map>());
@@ -35,18 +35,18 @@ void main() {
     });
 
     test('Layout correctly parsed', () {
-      final layoutMap = packetJson['layout']! as Map<String, Object?>;
-      final layout = Layout.fromMap(layoutMap);
+      final Map<String, Object?> layoutMap = packetJson['layout']! as Map<String, Object?>;
+      final Layout layout = Layout.fromMap(layoutMap);
       expect(layout.root, 'root_container');
       expect(layout.nodes, isA<List<LayoutNode>>());
       expect(layout.nodes.length, 3);
     });
 
     test('LayoutNode correctly parsed', () {
-      final layoutMap = packetJson['layout']! as Map<String, Object?>;
-      final nodes = layoutMap['nodes']! as List<Object?>;
-      final firstNodeMap = nodes[0]! as Map<String, Object?>;
-      final node = LayoutNode.fromMap(firstNodeMap);
+      final Map<String, Object?> layoutMap = packetJson['layout']! as Map<String, Object?>;
+      final List<Object?> nodes = layoutMap['nodes']! as List<Object?>;
+      final Map<String, Object?> firstNodeMap = nodes[0]! as Map<String, Object?>;
+      final LayoutNode node = LayoutNode.fromMap(firstNodeMap);
       expect(node.id, 'root_container');
       expect(node.type, 'Container');
       expect(node.properties, isA<Map>());
@@ -56,16 +56,16 @@ void main() {
     });
 
     test('LayoutNode correctly parsed with itemTemplate', () {
-      final layoutMap = packetJson['layout']! as Map<String, Object?>;
-      final nodes = layoutMap['nodes']! as List<Object?>;
+      final Map<String, Object?> layoutMap = packetJson['layout']! as Map<String, Object?>;
+      final List<Object?> nodes = layoutMap['nodes']! as List<Object?>;
       // Find the node with the itemTemplate for this test
-      final listNodeMap =
+      final Map<String, Object?> listNodeMap =
           nodes.firstWhere(
-                (n) => (n as Map<String, Object?>)['id'] == 'my_list_view',
+                (Object? n) => (n as Map<String, Object?>)['id'] == 'my_list_view',
               )
               as Map<String, Object?>;
 
-      final node = LayoutNode.fromMap(listNodeMap);
+      final LayoutNode node = LayoutNode.fromMap(listNodeMap);
       expect(node.id, 'my_list_view');
       expect(node.type, 'ListView');
       expect(node.itemTemplate, isNotNull);
@@ -75,19 +75,19 @@ void main() {
     });
 
     test('WidgetDefinition correctly parsed with events', () {
-      final items = catalogJson['items']! as Map<String, Object?>;
-      final buttonItem = items['Button']! as Map<String, Object?>;
-      final itemDef = WidgetDefinition.fromMap(buttonItem);
+      final Map<String, Object?> items = catalogJson['items']! as Map<String, Object?>;
+      final Map<String, Object?> buttonItem = items['Button']! as Map<String, Object?>;
+      final WidgetDefinition itemDef = WidgetDefinition.fromMap(buttonItem);
       expect(itemDef.events, isNotNull);
       expect(itemDef.events, isA<ObjectSchema>());
       expect(itemDef.events!.value.containsKey('onPressed'), isTrue);
     });
 
     test('EventPayload correctly parsed', () {
-      final payload = EventPayload.fromMap({
+      final EventPayload payload = EventPayload.fromMap(<String, Object?>{
         'sourceNodeId': 'my_button',
         'eventName': 'onPressed',
-        'arguments': {'clickCount': 1},
+        'arguments': <String, int>{'clickCount': 1},
       });
       expect(payload.sourceNodeId, 'my_button');
       expect(payload.eventName, 'onPressed');
@@ -96,19 +96,26 @@ void main() {
     });
 
     test('StateUpdate correctly parsed', () {
-      final replace = StateUpdate.fromMap({
-        'patches': [
-          {'op': 'replace', 'path': '/title', 'value': 'New Title'},
+      final StateUpdate replace = StateUpdate.fromMap(<String, Object?>{
+        'operations': <Map<String, Object>>[
+          <String, Object>{
+            'op': 'patch',
+            'patch': <String, String>{'op': 'replace', 'path': '/title', 'value': 'New Title'},
+          },
         ],
       });
-      expect(replace.patches, isA<List>());
-      expect(replace.patches.first['op'], 'replace');
+      expect(replace.operations, isA<List<StateOperation>>());
+      expect(replace.operations.first, isA<PatchOperation>());
+      final PatchOperation patchOp = replace.operations.first as PatchOperation;
+      expect(patchOp.patch.op, 'replace');
+      expect(patchOp.patch.path, '/title');
+      expect(patchOp.patch.value, 'New Title');
     });
 
     test('LayoutUpdate correctly parsed', () {
-      final add = LayoutUpdate.fromMap({
+      final LayoutUpdate add = LayoutUpdate.fromMap(<String, Object?>{
         'operations': <Map<String, Object?>>[
-          {'op': 'add', 'nodes': <Object?>[]},
+          <String, Object?>{'op': 'add', 'nodes': <Object?>[]},
         ],
       });
       expect(add.operations, isA<List>());
@@ -118,8 +125,8 @@ void main() {
 
   group('Binding Models', () {
     test('Binding with format correctly parsed', () {
-      final json = {'path': 'user.name', 'format': 'Welcome, {}'};
-      final binding = Binding.fromMap(json);
+      final Map<String, String> json = <String, String>{'path': 'user.name', 'format': 'Welcome, {}'};
+      final Binding binding = Binding.fromMap(json);
       expect(binding.path, 'user.name');
       expect(binding.format, 'Welcome, {}');
       expect(binding.condition, isNull);
@@ -127,11 +134,11 @@ void main() {
     });
 
     test('Binding with condition correctly parsed', () {
-      final json = {
+      final Map<String, Object> json = <String, Object>{
         'path': 'user.isPremium',
-        'condition': {'ifValue': 'Premium', 'elseValue': 'Standard'},
+        'condition': <String, String>{'ifValue': 'Premium', 'elseValue': 'Standard'},
       };
-      final binding = Binding.fromMap(json);
+      final Binding binding = Binding.fromMap(json);
       expect(binding.path, 'user.isPremium');
       expect(binding.condition, isNotNull);
       expect(binding.condition, isA<Condition>());
@@ -140,14 +147,14 @@ void main() {
     });
 
     test('Binding with map correctly parsed', () {
-      final json = {
+      final Map<String, Object> json = <String, Object>{
         'path': 'status',
-        'map': {
-          'mapping': {'active': 'Online', 'inactive': 'Offline'},
+        'map': <String, Object>{
+          'mapping': <String, String>{'active': 'Online', 'inactive': 'Offline'},
           'fallback': 'Unknown',
         },
       };
-      final binding = Binding.fromMap(json);
+      final Binding binding = Binding.fromMap(json);
       expect(binding.path, 'status');
       expect(binding.map, isNotNull);
       expect(binding.map, isA<MapTransformer>());
@@ -156,14 +163,14 @@ void main() {
     });
 
     test('Binding toJson produces original map', () {
-      final json = {
+      final Map<String, Object> json = <String, Object>{
         'path': 'status',
-        'map': {
-          'mapping': {'active': 'Online'},
+        'map': <String, Object>{
+          'mapping': <String, String>{'active': 'Online'},
           'fallback': 'Unknown',
         },
       };
-      final binding = Binding.fromMap(json);
+      final Binding binding = Binding.fromMap(json);
       expect(binding.toJson(), equals(json));
     });
   });

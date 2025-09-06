@@ -96,7 +96,7 @@ class _FcpViewState extends State<FcpView> {
       bindingProcessor: _bindingProcessor!,
     );
 
-    _listenable = Listenable.merge([_state!, _engine!]);
+    _listenable = Listenable.merge(<Listenable?>[_state!, _engine!]);
     _validateInitialState();
   }
 
@@ -129,12 +129,12 @@ class _FcpViewState extends State<FcpView> {
 
   void _listenToController() {
     _stateUpdateSubscription = widget.controller?.onStateUpdate.listen((
-      update,
+      StateUpdate update,
     ) {
       _statePatcher!.apply(_state!, update);
     });
     _layoutUpdateSubscription = widget.controller?.onLayoutUpdate.listen((
-      update,
+      LayoutUpdate update,
     ) {
       _engine!.patch(update);
     });
@@ -165,7 +165,7 @@ class _FcpViewState extends State<FcpView> {
       // performant for most cases.
       child: ListenableBuilder(
         listenable: _listenable!,
-        builder: (context, _) {
+        builder: (BuildContext context, _) {
           return _engine!.build(context);
         },
       ),
@@ -196,7 +196,7 @@ class _LayoutEngine with ChangeNotifier {
   /// Resets the engine to a new, clean layout.
   void reset(Layout newLayout) {
     _layout = newLayout;
-    _nodesById = {for (var node in _layout.nodes) node.id: node};
+    _nodesById = <String, LayoutNode>{for (LayoutNode node in _layout.nodes) node.id: node};
     notifyListeners();
   }
 
@@ -215,7 +215,7 @@ class _LayoutEngine with ChangeNotifier {
   Widget _buildNode(
     BuildContext context,
     String nodeId, [
-    Set<String> visited = const {},
+    Set<String> visited = const <String>{},
   ]) {
     // Check for cyclical dependencies.
     if (visited.contains(nodeId)) {
@@ -224,9 +224,9 @@ class _LayoutEngine with ChangeNotifier {
         'path.',
       );
     }
-    final currentPath = {...visited, nodeId};
+    final Set<String> currentPath = <String>{...visited, nodeId};
 
-    final node = _nodesById[nodeId];
+    final LayoutNode? node = _nodesById[nodeId];
     if (node == null) {
       return _ErrorWidget('Node with id "$nodeId" not found in layout.');
     }
@@ -236,7 +236,7 @@ class _LayoutEngine with ChangeNotifier {
       return _buildListView(context, node, currentPath);
     }
 
-    final builder = registry.getBuilder(node.type);
+    final CatalogWidgetBuilder? builder = registry.getBuilder(node.type);
     if (builder == null) {
       return _ErrorWidget(
         'No builder registered for widget type "${node.type}".',
@@ -244,25 +244,25 @@ class _LayoutEngine with ChangeNotifier {
     }
 
     // Validate required properties.
-    final itemDefMap = catalog.items[node.type];
+    final WidgetDefinition? itemDefMap = catalog.items[node.type];
     if (itemDefMap == null) {
       return _ErrorWidget(
         'Catalog item type "${node.type}" not found in catalog.',
       );
     }
-    final itemDef = WidgetDefinition.fromMap(
+    final WidgetDefinition itemDef = WidgetDefinition.fromMap(
       itemDefMap as Map<String, Object?>,
     );
 
     // Resolve dynamic properties from bindings.
-    final boundProperties = bindingProcessor.process(node);
+    final Map<String, Object?> boundProperties = bindingProcessor.process(node);
 
     // Merge static and dynamic properties. Bound properties override static
     // ones.
-    final resolvedProperties = {...?node.properties, ...boundProperties};
+    final Map<String, Object?> resolvedProperties = <String, Object?>{...?node.properties, ...boundProperties};
 
-    final requiredProperties = itemDef.properties.required ?? [];
-    for (final propName in requiredProperties) {
+    final List<String> requiredProperties = itemDef.properties.required ?? <String>[];
+    for (final String propName in requiredProperties) {
       if (!resolvedProperties.containsKey(propName)) {
         return _ErrorWidget(
           'Missing required property "$propName" for widget type '
@@ -272,17 +272,17 @@ class _LayoutEngine with ChangeNotifier {
     }
 
     // Recursively build all children defined in the properties.
-    final builtChildren = <String, List<Widget>>{};
-    for (final entry in resolvedProperties.entries) {
-      final key = entry.key;
-      final value = entry.value;
+    final Map<String, List<Widget>> builtChildren = <String, List<Widget>>{};
+    for (final MapEntry<String, Object?> entry in resolvedProperties.entries) {
+      final String key = entry.key;
+      final Object? value = entry.value;
 
       if (value is String && _nodesById.containsKey(value)) {
         // This is a single child reference by ID.
-        builtChildren[key] = [_buildNode(context, value, currentPath)];
+        builtChildren[key] = <Widget>[_buildNode(context, value, currentPath)];
       } else if (value is List) {
         // This could be a list of child references by ID.
-        final childWidgets = <Widget>[];
+        final List<Widget> childWidgets = <Widget>[];
         for (final item in value) {
           if (item is String && _nodesById.containsKey(item)) {
             childWidgets.add(_buildNode(context, item, currentPath));
@@ -303,15 +303,15 @@ class _LayoutEngine with ChangeNotifier {
     LayoutNode node,
     Set<String> visited,
   ) {
-    final itemDefMap = catalog.items[node.type];
+    final WidgetDefinition? itemDefMap = catalog.items[node.type];
     if (itemDefMap == null) {
       return _ErrorWidget(
         'Catalog item type "${node.type}" not found in catalog.',
       );
     }
-    final boundProperties = bindingProcessor.process(node);
-    final data = boundProperties['data'] as List<dynamic>? ?? [];
-    final itemTemplate = node.itemTemplate;
+    final Map<String, Object?> boundProperties = bindingProcessor.process(node);
+    final List<dynamic> data = boundProperties['data'] as List<dynamic>? ?? <dynamic>[];
+    final LayoutNode? itemTemplate = node.itemTemplate;
 
     if (itemTemplate == null) {
       return _ErrorWidget(
@@ -322,8 +322,8 @@ class _LayoutEngine with ChangeNotifier {
     return ListView.builder(
       shrinkWrap: true,
       itemCount: data.length,
-      itemBuilder: (context, index) {
-        final itemData = data[index] as Map<String, Object?>;
+      itemBuilder: (BuildContext context, int index) {
+        final Map<String, Object?> itemData = data[index] as Map<String, Object?>;
         return _buildListItem(context, itemTemplate, itemData, visited);
       },
     );
@@ -336,14 +336,14 @@ class _LayoutEngine with ChangeNotifier {
     Set<String> visited,
   ) {
     // Cycle checking is handled by passing the `visited` set to _buildNode.
-    final builder = registry.getBuilder(templateNode.type);
+    final CatalogWidgetBuilder? builder = registry.getBuilder(templateNode.type);
     if (builder == null) {
       return _ErrorWidget(
         'No builder for itemTemplate type "${templateNode.type}".',
       );
     }
 
-    final itemDefMap = catalog.items[templateNode.type];
+    final WidgetDefinition? itemDefMap = catalog.items[templateNode.type];
     if (itemDefMap == null) {
       return _ErrorWidget(
         'Catalog item type "${templateNode.type}" not found in catalog for '
@@ -351,25 +351,25 @@ class _LayoutEngine with ChangeNotifier {
       );
     }
 
-    final boundProperties = bindingProcessor.processScoped(
+    final Map<String, Object?> boundProperties = bindingProcessor.processScoped(
       templateNode,
       itemData,
     );
-    final resolvedProperties = {
+    final Map<String, Object?> resolvedProperties = <String, Object?>{
       ...?templateNode.properties,
       ...boundProperties,
     };
 
     // Recursively build children.
-    final builtChildren = <String, List<Widget>>{};
-    for (final entry in resolvedProperties.entries) {
-      final key = entry.key;
-      final value = entry.value;
+    final Map<String, List<Widget>> builtChildren = <String, List<Widget>>{};
+    for (final MapEntry<String, Object?> entry in resolvedProperties.entries) {
+      final String key = entry.key;
+      final Object? value = entry.value;
 
       if (value is String && _nodesById.containsKey(value)) {
-        builtChildren[key] = [_buildNode(context, value, visited)];
+        builtChildren[key] = <Widget>[_buildNode(context, value, visited)];
       } else if (value is List) {
-        final childWidgets = <Widget>[];
+        final List<Widget> childWidgets = <Widget>[];
         for (final item in value) {
           if (item is String && _nodesById.containsKey(item)) {
             childWidgets.add(_buildNode(context, item, visited));

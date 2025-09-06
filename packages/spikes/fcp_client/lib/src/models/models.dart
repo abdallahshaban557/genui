@@ -5,6 +5,7 @@
 import 'dart:convert';
 
 import 'package:dart_schema_builder/dart_schema_builder.dart' show ObjectSchema;
+import 'package:dart_schema_builder/src/schema/schema.dart';
 
 import '../constants.dart';
 
@@ -46,7 +47,7 @@ extension type WidgetCatalog.fromMap(Map<String, Object?> _json)
     String catalogVersion = fcpVersion,
     required Map<String, Object?> dataTypes,
     required Map<String, WidgetDefinition?> items,
-  }) => WidgetCatalog.fromMap({
+  }) => WidgetCatalog.fromMap(<String, Object?>{
     'catalogVersion': catalogVersion,
     'dataTypes': dataTypes,
     'items': items,
@@ -75,23 +76,25 @@ extension type WidgetDefinition.fromMap(Map<String, Object?> _json)
   factory WidgetDefinition({
     required ObjectSchema properties,
     ObjectSchema? events,
-  }) => WidgetDefinition.fromMap({
+  }) => WidgetDefinition.fromMap(<String, Object?>{
     'properties': properties.value,
     if (events != null) 'events': events.value,
   });
 
   /// A JSON Schema object that defines the supported attributes for the widget.
   ObjectSchema get properties {
-    final props = _json['properties'] as Map<String, Object?>?;
+    final Map<String, Object?>? props =
+        _json['properties'] as Map<String, Object?>?;
     if (props == null) {
-      return ObjectSchema(properties: {});
+      return ObjectSchema(properties: <String, Schema>{});
     }
     return ObjectSchema.fromMap(props);
   }
 
   /// A map of event names to their JSON Schema definitions.
   ObjectSchema? get events {
-    final events = _json['events'] as Map<String, Object?>?;
+    final Map<String, Object?>? events =
+        _json['events'] as Map<String, Object?>?;
     return events == null ? null : ObjectSchema.fromMap(events);
   }
 }
@@ -114,7 +117,7 @@ extension type DynamicUIPacket.fromMap(Map<String, Object?> _json)
     required Layout layout,
     required Map<String, Object?> state,
     Map<String, Object?>? metadata,
-  }) => DynamicUIPacket.fromMap({
+  }) => DynamicUIPacket.fromMap(<String, Object?>{
     'formatVersion': formatVersion,
     'layout': layout.toJson(),
     'state': state,
@@ -125,12 +128,13 @@ extension type DynamicUIPacket.fromMap(Map<String, Object?> _json)
   String get formatVersion => _json['formatVersion'] as String;
 
   /// The complete, non-recursive widget tree definition.
-  Layout get layout =>
-      Layout.fromMap(_json['layout'] as Map<String, Object?>? ?? {});
+  Layout get layout => Layout.fromMap(
+    _json['layout'] as Map<String, Object?>? ?? <String, Object?>{},
+  );
 
   /// The initial state data for the widgets defined in the layout.
   Map<String, Object?> get state =>
-      _json['state'] as Map<String, Object?>? ?? {};
+      _json['state'] as Map<String, Object?>? ?? <String, Object?>{};
 
   /// An optional object for server-side information.
   Map<String, Object?>? get metadata =>
@@ -145,9 +149,9 @@ extension type Layout.fromMap(Map<String, Object?> _json)
     implements JsonObjectBase {
   /// Creates a new [Layout] from a [root] node ID and a list of [nodes].
   factory Layout({required String root, required List<LayoutNode> nodes}) =>
-      Layout.fromMap({
+      Layout.fromMap(<String, Object?>{
         'root': root,
-        'nodes': nodes.map((e) => e.toJson()).toList(),
+        'nodes': nodes.map((LayoutNode e) => e.toJson()).toList(),
       });
 
   /// The ID of the root layout node.
@@ -155,7 +159,8 @@ extension type Layout.fromMap(Map<String, Object?> _json)
 
   /// A flat list of all the layout nodes in the UI.
   List<LayoutNode> get nodes {
-    final nodeList = _json['nodes'] as List<Object?>? ?? [];
+    final List<Object?> nodeList =
+        _json['nodes'] as List<Object?>? ?? <Object?>[];
     return nodeList
         .cast<Map<String, Object?>>()
         .map(LayoutNode.fromMap)
@@ -178,12 +183,15 @@ extension type LayoutNode.fromMap(Map<String, Object?> _json)
     Map<String, Object?>? properties,
     Map<String, Binding>? bindings,
     LayoutNode? itemTemplate,
-  }) => LayoutNode.fromMap({
+  }) => LayoutNode.fromMap(<String, Object?>{
     'id': id,
     'type': type,
     if (properties != null) 'properties': properties,
     if (bindings != null)
-      'bindings': bindings.map((key, value) => MapEntry(key, value.toJson())),
+      'bindings': bindings.map(
+        (String key, Binding value) =>
+            MapEntry<String, Object?>(key, value.toJson()),
+      ),
     if (itemTemplate != null) 'itemTemplate': itemTemplate.toJson(),
   });
 
@@ -199,16 +207,20 @@ extension type LayoutNode.fromMap(Map<String, Object?> _json)
 
   /// Binds widget properties to paths in the state object.
   Map<String, Binding>? get bindings {
-    final bindingsMap = _json['bindings'] as Map<String, Object?>?;
+    final Map<String, Object?>? bindingsMap =
+        _json['bindings'] as Map<String, Object?>?;
     return bindingsMap?.map(
-      (key, value) =>
-          MapEntry(key, Binding.fromMap(value as Map<String, Object?>)),
+      (String key, Object? value) => MapEntry<String, Binding>(
+        key,
+        Binding.fromMap(value as Map<String, Object?>),
+      ),
     );
   }
 
   /// A template node for list builder widgets.
   LayoutNode? get itemTemplate {
-    final templateJson = _json['itemTemplate'] as Map<String, Object?>?;
+    final Map<String, Object?>? templateJson =
+        _json['itemTemplate'] as Map<String, Object?>?;
     return templateJson != null ? LayoutNode.fromMap(templateJson) : null;
   }
 }
@@ -232,7 +244,7 @@ extension type EventPayload.fromMap(Map<String, Object?> _json)
     required String eventName,
     Map<String, Object?>? arguments,
     DateTime? timestamp,
-  }) => EventPayload.fromMap({
+  }) => EventPayload.fromMap(<String, Object?>{
     'sourceNodeId': sourceNodeId,
     'eventName': eventName,
     'timestamp': (timestamp ?? DateTime.now()).toIso8601String(),
@@ -259,15 +271,18 @@ extension type StateUpdate.fromMap(Map<String, Object?> _json)
     implements JsonObjectBase {
   /// Creates a new [StateUpdate] from a list of [operations].
   factory StateUpdate({required List<StateOperation> operations}) =>
-      StateUpdate.fromMap({
-        'operations': operations.map((e) => e.toJson()).toList(),
+      StateUpdate.fromMap(<String, Object?>{
+        'operations': operations.map((StateOperation e) => e.toJson()).toList(),
       });
 
   /// An array of state operation objects.
   List<StateOperation> get operations {
-    final opsList = _json['operations'] as List<Object?>;
-    return opsList.cast<Map<String, Object?>>().map((opMap) {
-      final op = opMap['op'] as String?;
+    final List<dynamic> opsList =
+        _json['operations'] as List<dynamic>? ?? <dynamic>[];
+    return opsList.cast<Map<String, Object?>>().map((
+      Map<String, Object?> opMap,
+    ) {
+      final String? op = opMap['op'] as String?;
       switch (op) {
         case 'patch':
           return PatchOperation.fromMap(opMap);
@@ -294,7 +309,7 @@ sealed class StateOperation {
 
   /// Creates a [StateOperation] from a map.
   factory StateOperation.fromMap(Map<String, Object?> map) {
-    final op = map['op'] as String?;
+    final String? op = map['op'] as String?;
     switch (op) {
       case 'patch':
         return PatchOperation.fromMap(map);
@@ -329,10 +344,10 @@ class PatchOperation extends StateOperation {
   }
 
   @override
-  Map<String, Object?> toJson() => {
-        'op': op,
-        'patch': patch.toJson(),
-      };
+  Map<String, Object?> toJson() => <String, Object?>{
+    'op': op,
+    'patch': patch.toJson(),
+  };
 }
 
 /// A type-safe wrapper for a `PatchObject` JSON object.
@@ -343,12 +358,11 @@ extension type PatchObject.fromMap(Map<String, Object?> _json)
     required String op,
     required String path,
     Object? value,
-  }) =>
-      PatchObject.fromMap({
-        'op': op,
-        'path': path,
-        if (value != null) 'value': value,
-      });
+  }) => PatchObject.fromMap(<String, Object?>{
+    'op': op,
+    'path': path,
+    if (value != null) 'value': value,
+  });
 
   /// The operation to perform (`add`, `remove`, or `replace`).
   String get op => _json['op'] as String;
@@ -383,11 +397,11 @@ class ListAppendOperation extends StateOperation {
   }
 
   @override
-  Map<String, Object?> toJson() => {
-        'op': op,
-        'path': path,
-        'items': items,
-      };
+  Map<String, Object?> toJson() => <String, Object?>{
+    'op': op,
+    'path': path,
+    'items': items,
+  };
 }
 
 /// A type-safe wrapper for a `ListRemoveOperation` JSON object.
@@ -421,12 +435,12 @@ class ListRemoveOperation extends StateOperation {
   }
 
   @override
-  Map<String, Object?> toJson() => {
-        'op': op,
-        'path': path,
-        'itemKey': itemKey,
-        'keys': keys,
-      };
+  Map<String, Object?> toJson() => <String, Object?>{
+    'op': op,
+    'path': path,
+    'itemKey': itemKey,
+    'keys': keys,
+  };
 }
 
 /// A type-safe wrapper for a `ListUpdateOperation` JSON object.
@@ -460,12 +474,12 @@ class ListUpdateOperation extends StateOperation {
   }
 
   @override
-  Map<String, Object?> toJson() => {
-        'op': op,
-        'path': path,
-        'itemKey': itemKey,
-        'items': items,
-      };
+  Map<String, Object?> toJson() => <String, Object?>{
+    'op': op,
+    'path': path,
+    'itemKey': itemKey,
+    'items': items,
+  };
 }
 
 /// A type-safe wrapper for a `LayoutUpdate` payload, which delivers surgical
@@ -475,13 +489,15 @@ extension type LayoutUpdate.fromMap(Map<String, Object?> _json)
     implements JsonObjectBase {
   /// Creates a new [LayoutUpdate] from a list of [operations].
   factory LayoutUpdate({required List<LayoutOperation> operations}) =>
-      LayoutUpdate.fromMap({
-        'operations': operations.map((e) => e.toJson()).toList(),
+      LayoutUpdate.fromMap(<String, Object?>{
+        'operations': operations
+            .map((LayoutOperation e) => e.toJson())
+            .toList(),
       });
 
   /// An array of layout modification objects.
   List<LayoutOperation> get operations {
-    final opsList = _json['operations'] as List<Object?>;
+    final List<Object?> opsList = _json['operations'] as List<Object?>;
     return opsList
         .cast<Map<String, Object?>>()
         .map(LayoutOperation.fromMap)
@@ -502,9 +518,10 @@ extension type LayoutOperation.fromMap(Map<String, Object?> _json)
     List<String>? nodeIds,
     String? targetNodeId,
     String? targetProperty,
-  }) => LayoutOperation.fromMap({
+  }) => LayoutOperation.fromMap(<String, Object?>{
     'op': op,
-    if (nodes != null) 'nodes': nodes.map((e) => e.toJson()).toList(),
+    if (nodes != null)
+      'nodes': nodes.map((LayoutNode e) => e.toJson()).toList(),
     if (nodeIds != null) 'nodeIds': nodeIds,
     if (targetNodeId != null) 'targetNodeId': targetNodeId,
     if (targetProperty != null) 'targetProperty': targetProperty,
@@ -515,7 +532,7 @@ extension type LayoutOperation.fromMap(Map<String, Object?> _json)
 
   /// The nodes to add or replace.
   List<LayoutNode>? get nodes {
-    final nodeList = _json['nodes'] as List<Object?>?;
+    final List<Object?>? nodeList = _json['nodes'] as List<Object?>?;
     return nodeList
         ?.cast<Map<String, Object?>>()
         .map(LayoutNode.fromMap)
@@ -524,7 +541,7 @@ extension type LayoutOperation.fromMap(Map<String, Object?> _json)
 
   /// The IDs of the nodes to remove.
   List<String>? get nodeIds {
-    final idList = _json['nodeIds'] as List<Object?>?;
+    final List<Object?>? idList = _json['nodeIds'] as List<Object?>?;
     return idList?.cast<String>();
   }
 
@@ -555,7 +572,7 @@ extension type Binding.fromMap(Map<String, Object?> _json)
     String? format,
     Condition? condition,
     MapTransformer? map,
-  }) => Binding.fromMap({
+  }) => Binding.fromMap(<String, Object?>{
     'path': path,
     if (format != null) 'format': format,
     if (condition != null) 'condition': condition.toJson(),
@@ -570,13 +587,14 @@ extension type Binding.fromMap(Map<String, Object?> _json)
 
   /// A conditional transformer.
   Condition? get condition {
-    final conditionJson = _json['condition'] as Map<String, Object?>?;
+    final Map<String, Object?>? conditionJson =
+        _json['condition'] as Map<String, Object?>?;
     return conditionJson != null ? Condition.fromMap(conditionJson) : null;
   }
 
   /// A map transformer.
   MapTransformer? get map {
-    final mapJson = _json['map'] as Map<String, Object?>?;
+    final Map<String, Object?>? mapJson = _json['map'] as Map<String, Object?>?;
     return mapJson != null ? MapTransformer.fromMap(mapJson) : null;
   }
 
@@ -591,10 +609,11 @@ extension type Binding.fromMap(Map<String, Object?> _json)
 extension type Condition.fromMap(Map<String, Object?> _json)
     implements JsonObjectBase {
   /// Creates a new [Condition] from an optional [ifValue] and [elseValue].
-  factory Condition({Object? ifValue, Object? elseValue}) => Condition.fromMap({
-    if (ifValue != null) 'ifValue': ifValue,
-    if (elseValue != null) 'elseValue': elseValue,
-  });
+  factory Condition({Object? ifValue, Object? elseValue}) =>
+      Condition.fromMap(<String, Object?>{
+        if (ifValue != null) 'ifValue': ifValue,
+        if (elseValue != null) 'elseValue': elseValue,
+      });
 
   /// The value to use if the state value is `true`.
   Object? get ifValue => _json['ifValue'];
@@ -614,7 +633,7 @@ extension type MapTransformer.fromMap(Map<String, Object?> _json)
   factory MapTransformer({
     required Map<String, Object?> mapping,
     Object? fallback,
-  }) => MapTransformer.fromMap({
+  }) => MapTransformer.fromMap(<String, Object?>{
     'mapping': mapping,
     if (fallback != null) 'fallback': fallback,
   });

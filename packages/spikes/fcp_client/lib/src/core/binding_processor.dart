@@ -21,13 +21,13 @@ class BindingProcessor {
 
   /// Resolves all bindings for a given layout node against the main state.
   Map<String, Object?> process(LayoutNode node) {
-    final itemDefJson = _state.catalog.items[node.type];
+    final WidgetDefinition? itemDefJson = _state.catalog.items[node.type];
     if (itemDefJson == null) {
       // It's valid for a widget to not have a definition, in which case
       // it has no properties that can be bound.
-      return const {};
+      return const <String, Object?>{};
     }
-    final itemDef = WidgetDefinition.fromMap(
+    final WidgetDefinition itemDef = WidgetDefinition.fromMap(
       itemDefJson as Map<String, Object?>,
     );
     return _processBindings(node.bindings, itemDef, null);
@@ -42,13 +42,13 @@ class BindingProcessor {
     LayoutNode node,
     Map<String, Object?> scopedData,
   ) {
-    final itemDefJson = _state.catalog.items[node.type];
+    final WidgetDefinition? itemDefJson = _state.catalog.items[node.type];
     if (itemDefJson == null) {
       // It's valid for a widget to not have a definition, in which case
       // it has no properties that can be bound.
-      return const {};
+      return const <String, Object?>{};
     }
-    final itemDef = WidgetDefinition.fromMap(
+    final WidgetDefinition itemDef = WidgetDefinition.fromMap(
       itemDefJson as Map<String, Object?>,
     );
     return _processBindings(node.bindings, itemDef, scopedData);
@@ -59,14 +59,14 @@ class BindingProcessor {
     WidgetDefinition itemDef,
     Map<String, Object?>? scopedData,
   ) {
-    final resolvedProperties = <String, Object?>{};
+    final Map<String, Object?> resolvedProperties = <String, Object?>{};
     if (bindings == null) {
       return resolvedProperties;
     }
 
-    for (final entry in bindings.entries) {
-      final propertyName = entry.key;
-      final binding = entry.value;
+    for (final MapEntry<String, Binding> entry in bindings.entries) {
+      final String propertyName = entry.key;
+      final Binding binding = entry.value;
       resolvedProperties[propertyName] = _resolveBinding(
         binding,
         propertyName,
@@ -87,7 +87,7 @@ class BindingProcessor {
     Object? rawValue;
     if (binding.path.startsWith('item.')) {
       // Scoped path, resolve against the item data.
-      final path = binding.path.substring(5);
+      final String path = binding.path.substring(5);
       rawValue = _getValueFromMap(path, scopedData);
     } else {
       // Global path, resolve against the main state.
@@ -98,7 +98,7 @@ class BindingProcessor {
       debugPrint(
         'FCP Warning: Binding path "${binding.path}" resolved to null.',
       );
-      final propSchema = itemDef.properties.properties?[propertyName];
+      final Schema? propSchema = itemDef.properties.properties?[propertyName];
       if (propSchema != null) {
         return _getDefaultValueForType(propSchema);
       }
@@ -110,9 +110,9 @@ class BindingProcessor {
 
   Object? _getValueFromMap(String path, Map<String, Object?>? map) {
     if (map == null) return null;
-    final parts = path.split('.');
+    final List<String> parts = path.split('.');
     Object? currentValue = map;
-    for (final part in parts) {
+    for (final String part in parts) {
       if (currentValue is Map<String, Object?>) {
         currentValue = currentValue[part];
       } else {
@@ -128,7 +128,7 @@ class BindingProcessor {
     }
 
     if (binding.condition != null) {
-      final condition = binding.condition!;
+      final Condition condition = binding.condition!;
       if (value == true) {
         return condition.ifValue;
       } else {
@@ -137,8 +137,8 @@ class BindingProcessor {
     }
 
     if (binding.map != null) {
-      final map = binding.map!;
-      final key = value?.toString();
+      final MapTransformer map = binding.map!;
+      final String? key = value?.toString();
       return map.mapping[key] ?? map.fallback;
     }
 
@@ -149,7 +149,7 @@ class BindingProcessor {
     if (schema.defaultValue != null) {
       return schema.defaultValue;
     }
-    final type = schema.type;
+    final Object? type = schema.type;
     if (type is String) {
       switch (type) {
         case 'string':
@@ -173,7 +173,7 @@ class BindingProcessor {
         return null;
       }
       // Return the default for the first type in the list.
-      return _getDefaultValueForType(Schema.fromMap({'type': type.first}));
+      return _getDefaultValueForType(Schema.fromMap(<String, Object?>{'type': type.first}));
     }
     return null;
   }

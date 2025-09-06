@@ -190,7 +190,7 @@ void main() {
 
     testWidgets('handles empty widget list', (WidgetTester tester) async {
       const surfaceId = 'test_surface';
-      final definition = {'root': 'root1', 'widgets': []};
+      final definition = {'root': 'root1', 'widgets': <String>[]};
       manager.addOrUpdateSurface(surfaceId, definition);
 
       await tester.pumpWidget(

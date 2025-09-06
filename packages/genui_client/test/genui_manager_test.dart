@@ -72,34 +72,32 @@ void main() {
       manager.dispose();
     });
 
-    test(
-      'addOrUpdateSurface() updates an existing surface and fires SurfaceUpdated',
-      () {
-        const surfaceId = 'test_surface';
-        final definition1 = {'root': 'r1', 'widgets': []};
-        final definition2 = {'root': 'r2', 'widgets': []};
+    test('addOrUpdateSurface() updates an existing surface and fires '
+        'SurfaceUpdated', () {
+      const surfaceId = 'test_surface';
+      final definition1 = {'root': 'r1', 'widgets': <String>[]};
+      final definition2 = {'root': 'r2', 'widgets': <String>[]};
 
-        manager.addOrUpdateSurface(surfaceId, definition1);
+      manager.addOrUpdateSurface(surfaceId, definition1);
 
-        expectLater(
-          manager.updates,
-          emits(
-            isA<SurfaceUpdated>().having(
-              (e) => e.surfaceId,
-              'surfaceId',
-              surfaceId,
-            ),
+      expectLater(
+        manager.updates,
+        emits(
+          isA<SurfaceUpdated>().having(
+            (e) => e.surfaceId,
+            'surfaceId',
+            surfaceId,
           ),
-        );
+        ),
+      );
 
-        manager.addOrUpdateSurface(surfaceId, definition2);
+      manager.addOrUpdateSurface(surfaceId, definition2);
 
-        final notifier = manager.surface(surfaceId);
-        expect(notifier.value, isNotNull);
-        expect(notifier.value!.root, 'r2');
-        manager.dispose();
-      },
-    );
+      final notifier = manager.surface(surfaceId);
+      expect(notifier.value, isNotNull);
+      expect(notifier.value!.root, 'r2');
+      manager.dispose();
+    });
 
     test('deleteSurface() removes a surface and fires SurfaceRemoved', () {
       const surfaceId = 'test_surface';

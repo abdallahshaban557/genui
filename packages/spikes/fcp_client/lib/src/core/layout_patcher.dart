@@ -12,7 +12,7 @@ class LayoutPatcher {
   ///
   /// The operations (`add`, `remove`, `replace`) are applied sequentially.
   void apply(Map<String, LayoutNode> nodeMap, LayoutUpdate update) {
-    for (final operation in update.operations) {
+    for (final LayoutOperation operation in update.operations) {
       switch (operation.op) {
         case 'add':
           _handleAdd(nodeMap, operation);
@@ -34,23 +34,23 @@ class LayoutPatcher {
   }
 
   void _handleAdd(Map<String, LayoutNode> nodeMap, LayoutOperation operation) {
-    final nodes = operation.nodes;
+    final List<LayoutNode>? nodes = operation.nodes;
     if (nodes == null || nodes.isEmpty) {
       return;
     }
 
-    for (final node in nodes) {
+    for (final LayoutNode node in nodes) {
       nodeMap[node.id] = node;
     }
 
-    final targetNodeId = operation.targetNodeId;
-    final targetProperty = operation.targetProperty;
+    final String? targetNodeId = operation.targetNodeId;
+    final String? targetProperty = operation.targetProperty;
 
     if (targetNodeId == null || targetProperty == null) {
       return;
     }
 
-    final targetNode = nodeMap[targetNodeId];
+    final LayoutNode? targetNode = nodeMap[targetNodeId];
     if (targetNode == null) {
       debugPrint(
         'FCP Warning: Target node "$targetNodeId" not found for "add" '
@@ -59,24 +59,24 @@ class LayoutPatcher {
       return;
     }
 
-    final newNodeIds = nodes.map((n) => n.id).toList();
-    final currentProperties = Map<String, Object?>.from(
-      targetNode.properties ?? {},
+    final List<String> newNodeIds = nodes.map((LayoutNode n) => n.id).toList();
+    final Map<String, Object?> currentProperties = Map<String, Object?>.from(
+      targetNode.properties ?? <dynamic, dynamic>{},
     );
-    final currentChildren = currentProperties[targetProperty];
+    final Object? currentChildren = currentProperties[targetProperty];
 
     final List<String> newChildrenIds;
     if (currentChildren is List) {
-      newChildrenIds = [...currentChildren.cast<String>(), ...newNodeIds];
+      newChildrenIds = <String>[...currentChildren.cast<String>(), ...newNodeIds];
     } else if (currentChildren is String) {
-      newChildrenIds = [currentChildren, ...newNodeIds];
+      newChildrenIds = <String>[currentChildren, ...newNodeIds];
     } else {
       newChildrenIds = newNodeIds;
     }
 
     currentProperties[targetProperty] = newChildrenIds;
 
-    final newTargetNode = LayoutNode(
+    final LayoutNode newTargetNode = LayoutNode(
       id: targetNode.id,
       type: targetNode.type,
       properties: currentProperties,
@@ -91,12 +91,12 @@ class LayoutPatcher {
     Map<String, LayoutNode> nodeMap,
     LayoutOperation operation,
   ) {
-    final ids = operation.nodeIds;
+    final List<String>? ids = operation.nodeIds;
     if (ids == null || ids.isEmpty) {
       return;
     }
 
-    for (final id in ids) {
+    for (final String id in ids) {
       nodeMap.remove(id);
     }
   }
@@ -105,12 +105,12 @@ class LayoutPatcher {
     Map<String, LayoutNode> nodeMap,
     LayoutOperation operation,
   ) {
-    final nodes = operation.nodes;
+    final List<LayoutNode>? nodes = operation.nodes;
     if (nodes == null || nodes.isEmpty) {
       return;
     }
 
-    for (final node in nodes) {
+    for (final LayoutNode node in nodes) {
       if (nodeMap.containsKey(node.id)) {
         nodeMap[node.id] = node;
       }

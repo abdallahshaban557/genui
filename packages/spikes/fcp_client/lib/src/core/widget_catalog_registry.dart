@@ -55,7 +55,7 @@ class CatalogItem {
 /// This allows the FCP client to be extended with custom widget
 /// implementations.
 class WidgetCatalogRegistry {
-  final Map<String, CatalogItem> _registeredWidgets = {};
+  final Map<String, CatalogItem> _registeredWidgets = <String, CatalogItem>{};
 
   /// Registers a widget.
   ///
@@ -86,14 +86,14 @@ class WidgetCatalogRegistry {
   /// any custom data types to be included in the catalog.
   WidgetCatalog buildCatalog({
     String catalogVersion = fcpVersion,
-    Map<String, Object?> dataTypes = const {},
+    Map<String, Object?> dataTypes = const <String, Object?>{},
   }) {
-    final items = <String, WidgetDefinition?>{};
-    for (final widget in _registeredWidgets.values) {
+    final Map<String, WidgetDefinition?> items = <String, WidgetDefinition?>{};
+    for (final CatalogItem widget in _registeredWidgets.values) {
       items[widget.name] = widget.definition;
     }
 
-    return WidgetCatalog.fromMap({
+    return WidgetCatalog.fromMap(<String, Object?>{
       'catalogVersion': catalogVersion,
       'dataTypes': dataTypes,
       'items': items,

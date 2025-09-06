@@ -13,32 +13,32 @@ void main() {
 
     setUp(() {
       patcher = LayoutPatcher();
-      nodeMap = {
-        'root': LayoutNode.fromMap({
+      nodeMap = <String, LayoutNode>{
+        'root': LayoutNode.fromMap(<String, Object?>{
           'id': 'root',
           'type': 'Container',
-          'properties': {'child': 'child1'},
+          'properties': <String, String>{'child': 'child1'},
         }),
-        'child1': LayoutNode.fromMap({
+        'child1': LayoutNode.fromMap(<String, Object?>{
           'id': 'child1',
           'type': 'Text',
-          'properties': {'text': 'Hello'},
+          'properties': <String, String>{'text': 'Hello'},
         }),
-        'child2': LayoutNode.fromMap({
+        'child2': LayoutNode.fromMap(<String, Object?>{
           'id': 'child2',
           'type': 'Text',
-          'properties': {'text': 'World'},
+          'properties': <String, String>{'text': 'World'},
         }),
       };
     });
 
     test('handles "add" operation', () {
-      final add = LayoutUpdate.fromMap({
-        'operations': [
-          {
+      final LayoutUpdate add = LayoutUpdate.fromMap(<String, Object?>{
+        'operations': <Map<String, Object>>[
+          <String, Object>{
             'op': 'add',
-            'nodes': [
-              {'id': 'child3', 'type': 'Button'},
+            'nodes': <Map<String, String>>[
+              <String, String>{'id': 'child3', 'type': 'Button'},
             ],
           },
         ],
@@ -51,11 +51,11 @@ void main() {
     });
 
     test('handles "remove" operation', () {
-      final remove = LayoutUpdate.fromMap({
-        'operations': [
-          {
+      final LayoutUpdate remove = LayoutUpdate.fromMap(<String, Object?>{
+        'operations': <Map<String, Object>>[
+          <String, Object>{
             'op': 'remove',
-            'nodeIds': ['child1', 'child2'],
+            'nodeIds': <String>['child1', 'child2'],
           },
         ],
       });
@@ -68,15 +68,15 @@ void main() {
     });
 
     test('handles "replace" operation', () {
-      final replace = LayoutUpdate.fromMap({
-        'operations': [
-          {
+      final LayoutUpdate replace = LayoutUpdate.fromMap(<String, Object?>{
+        'operations': <Map<String, Object>>[
+          <String, Object>{
             'op': 'replace',
-            'nodes': [
-              {
+            'nodes': <Map<String, Object>>[
+              <String, Object>{
                 'id': 'child1',
                 'type': 'Text',
-                'properties': {'text': 'Goodbye'},
+                'properties': <String, String>{'text': 'Goodbye'},
               },
             ],
           },
@@ -89,26 +89,26 @@ void main() {
     });
 
     test('handles multiple operations in sequence', () {
-      final update = LayoutUpdate.fromMap({
-        'operations': [
-          {
+      final LayoutUpdate update = LayoutUpdate.fromMap(<String, Object?>{
+        'operations': <Map<String, Object>>[
+          <String, Object>{
             'op': 'remove',
-            'nodeIds': ['child2'],
+            'nodeIds': <String>['child2'],
           },
-          {
+          <String, Object>{
             'op': 'replace',
-            'nodes': [
-              {
+            'nodes': <Map<String, Object>>[
+              <String, Object>{
                 'id': 'child1',
                 'type': 'Text',
-                'properties': {'text': 'Updated'},
+                'properties': <String, String>{'text': 'Updated'},
               },
             ],
           },
-          {
+          <String, Object>{
             'op': 'add',
-            'nodes': [
-              {'id': 'new_child', 'type': 'Icon'},
+            'nodes': <Map<String, String>>[
+              <String, String>{'id': 'new_child', 'type': 'Icon'},
             ],
           },
         ],
@@ -122,9 +122,9 @@ void main() {
     });
 
     test('ignores unknown operations gracefully', () {
-      final update = LayoutUpdate.fromMap({
-        'operations': [
-          {'op': 'unknown_op'},
+      final LayoutUpdate update = LayoutUpdate.fromMap(<String, Object?>{
+        'operations': <Map<String, String>>[
+          <String, String>{'op': 'unknown_op'},
         ],
       });
 
@@ -134,11 +134,11 @@ void main() {
     });
 
     test('does not fail on empty or null node/id lists', () {
-      final update = LayoutUpdate.fromMap({
-        'operations': [
-          {'op': 'add', 'nodes': <Map<String, Object?>>[]},
-          {'op': 'remove', 'nodeIds': null},
-          {'op': 'replace', 'nodes': null},
+      final LayoutUpdate update = LayoutUpdate.fromMap(<String, Object?>{
+        'operations': <Map<String, Object?>>[
+          <String, Object>{'op': 'add', 'nodes': <Map<String, Object?>>[]},
+          <String, String?>{'op': 'remove', 'nodeIds': null},
+          <String, String?>{'op': 'replace', 'nodes': null},
         ],
       });
 
@@ -147,12 +147,12 @@ void main() {
       expect(nodeMap.length, 3);
     });
     test('does not throw when updating a non-existent node', () {
-      final replace = LayoutUpdate.fromMap({
-        'operations': [
-          {
+      final LayoutUpdate replace = LayoutUpdate.fromMap(<String, Object?>{
+        'operations': <Map<String, Object>>[
+          <String, Object>{
             'op': 'replace',
-            'nodes': [
-              {'id': 'non_existent', 'type': 'Text'},
+            'nodes': <Map<String, String>>[
+              <String, String>{'id': 'non_existent', 'type': 'Text'},
             ],
           },
         ],

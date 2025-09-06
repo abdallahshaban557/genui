@@ -43,9 +43,9 @@ class FcpState with ChangeNotifier {
 
   /// Retrieves a value from the state using a dot-separated path.
   Object? getValue(String path) {
-    final parts = path.split('.');
+    final List<String> parts = path.split('.');
     Object? currentValue = _state;
-    for (final part in parts) {
+    for (final String part in parts) {
       if (currentValue is Map<String, Object?>) {
         currentValue = currentValue[part];
       } else {
@@ -60,9 +60,9 @@ class FcpState with ChangeNotifier {
   /// Returns `true` if all data types in the state are valid, `false`
   /// otherwise.
   Future<bool> validate(Map<String, Object?> newState) async {
-    for (final entry in newState.entries) {
-      final key = entry.key;
-      final value = entry.value;
+    for (final MapEntry<String, Object?> entry in newState.entries) {
+      final String key = entry.key;
+      final Object? value = entry.value;
       if (value is Map<String, Object?>) {
         if (!await validator.validate(
           dataType: key,

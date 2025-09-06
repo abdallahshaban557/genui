@@ -12,7 +12,7 @@ void main() {
     late WidgetCatalog catalog;
 
     setUp(() {
-      catalog = WidgetCatalog.fromMap({
+      catalog = WidgetCatalog.fromMap(<String, Object?>{
         'catalogVersion': '1.0.0',
         'items': <String, Object?>{},
         'dataTypes': <String, Object?>{},
@@ -20,8 +20,8 @@ void main() {
     });
 
     test('getValue retrieves top-level values', () {
-      final state = FcpState(
-        {'name': 'test', 'value': 123},
+      final FcpState state = FcpState(
+        <String, Object?>{'name': 'test', 'value': 123},
         validator: DataTypeValidator(),
         catalog: catalog,
       );
@@ -30,11 +30,11 @@ void main() {
     });
 
     test('getValue retrieves nested values', () {
-      final state = FcpState(
-        {
-          'user': {
+      final FcpState state = FcpState(
+        <String, Object?>{
+          'user': <String, Object>{
             'name': 'John Doe',
-            'address': {'city': 'New York'},
+            'address': <String, String>{'city': 'New York'},
           },
         },
         validator: DataTypeValidator(),
@@ -45,9 +45,9 @@ void main() {
     });
 
     test('getValue returns null for non-existent paths', () {
-      final state = FcpState(
-        {
-          'user': {'name': 'John Doe'},
+      final FcpState state = FcpState(
+        <String, Object?>{
+          'user': <String, String>{'name': 'John Doe'},
         },
         validator: DataTypeValidator(),
         catalog: catalog,
@@ -58,8 +58,8 @@ void main() {
     });
 
     test('getValue returns null for invalid paths', () {
-      final state = FcpState(
-        {'user': 'John Doe'},
+      final FcpState state = FcpState(
+        <String, Object?>{'user': 'John Doe'},
         validator: DataTypeValidator(),
         catalog: catalog,
       );
@@ -67,17 +67,17 @@ void main() {
     });
 
     test('state setter notifies listeners', () {
-      final state = FcpState(
-        {'value': 1},
+      final FcpState state = FcpState(
+        <String, Object?>{'value': 1},
         validator: DataTypeValidator(),
         catalog: catalog,
       );
-      var notified = false;
+      bool notified = false;
       state.addListener(() {
         notified = true;
       });
 
-      state.state = {'value': 2};
+      state.state = <String, Object?>{'value': 2};
       expect(state.getValue('value'), 2);
       expect(notified, isTrue);
     });

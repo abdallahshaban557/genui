@@ -16,8 +16,8 @@ import '../models/models.dart';
 /// an application, such as a native backend or a separate state management
 /// solution.
 class FcpViewController {
-  final _stateUpdateController = StreamController<StateUpdate>.broadcast();
-  final _layoutUpdateController = StreamController<LayoutUpdate>.broadcast();
+  final StreamController<StateUpdate> _stateUpdateController = StreamController<StateUpdate>.broadcast();
+  final StreamController<LayoutUpdate> _layoutUpdateController = StreamController<LayoutUpdate>.broadcast();
 
   /// A stream of [StateUpdate] payloads to be applied to the view.
   /// The [FcpView] listens to this stream and applies the patches accordingly.

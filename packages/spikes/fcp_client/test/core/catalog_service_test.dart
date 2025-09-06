@@ -11,8 +11,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('CatalogService', () {
-    final service = CatalogService();
-    final validJsonString = '''
+    final CatalogService service = CatalogService();
+    final String validJsonString = '''
       {
         "catalogVersion": "1.0.0",
         "dataTypes": {},
@@ -25,12 +25,12 @@ void main() {
         }
       }
     ''';
-    final invalidJsonString =
+    final String invalidJsonString =
         '{"catalogVersion": "1.0.0", "items": "not a map"}';
 
     group('parse', () {
       test('parses valid JSON string into a WidgetCatalog', () {
-        final catalog = service.parse(validJsonString);
+        final WidgetCatalog catalog = service.parse(validJsonString);
         expect(catalog, isA<WidgetCatalog>());
         expect(catalog.catalogVersion, '1.0.0');
         expect(catalog.items.keys, contains('Text'));
@@ -66,15 +66,15 @@ void main() {
       });
 
       test('loads and parses a catalog from assets', () async {
-        mockAssetHandler((message) async {
-          final key = utf8.decode(message!.buffer.asUint8List());
+        mockAssetHandler((ByteData? message) async {
+          final String key = utf8.decode(message!.buffer.asUint8List());
           if (key == 'assets/test_catalog.json') {
             return ByteData.sublistView(utf8.encoder.convert(validJsonString));
           }
           return null;
         });
 
-        final catalog = await service.loadFromAssets(
+        final WidgetCatalog catalog = await service.loadFromAssets(
           'assets/test_catalog.json',
         );
         expect(catalog, isA<WidgetCatalog>());
@@ -83,7 +83,7 @@ void main() {
 
       test('throws if asset does not exist', () async {
         // This mock handler always returns null, simulating a missing asset.
-        mockAssetHandler((message) async => null);
+        mockAssetHandler((ByteData? message) async => null);
 
         expect(
           () => service.loadFromAssets('assets/non_existent.json'),

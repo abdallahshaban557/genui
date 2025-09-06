@@ -3,3 +3,9 @@
 # found in the LICENSE file.
 
 include: package:dart_flutter_team_lints/analysis_options.yaml
+
+linter:
+  rules:
+    always_specify_types: true
+    omit_local_variable_types: false
+

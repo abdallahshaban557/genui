@@ -13,26 +13,26 @@ void main() {
 
     setUp(() {
       validator = DataTypeValidator();
-      catalog = WidgetCatalog.fromMap({
+      catalog = WidgetCatalog.fromMap(<String, Object?>{
         'catalogVersion': '1.0.0',
         'items': <String, Object?>{},
-        'dataTypes': {
-          'user': {
+        'dataTypes': <String, Map<String, Object>>{
+          'user': <String, Object>{
             'type': 'object',
-            'properties': {
-              'name': {'type': 'string'},
-              'email': {'type': 'string', 'format': 'email'},
-              'age': {'type': 'integer'},
+            'properties': <String, Map<String, String>>{
+              'name': <String, String>{'type': 'string'},
+              'email': <String, String>{'type': 'string', 'format': 'email'},
+              'age': <String, String>{'type': 'integer'},
             },
-            'required': ['name', 'email'],
+            'required': <String>['name', 'email'],
           },
         },
       });
     });
 
     test('returns true for valid data', () async {
-      final data = {'name': 'Alice', 'email': 'alice@example.com', 'age': 30};
-      final isValid = await validator.validate(
+      final Map<String, Object> data = <String, Object>{'name': 'Alice', 'email': 'alice@example.com', 'age': 30};
+      final bool isValid = await validator.validate(
         dataType: 'user',
         data: data,
         catalog: catalog,
@@ -43,8 +43,8 @@ void main() {
     test(
       'returns false for invalid data (missing required property)',
       () async {
-        final data = {'age': 30};
-        final isValid = await validator.validate(
+        final Map<String, int> data = <String, int>{'age': 30};
+        final bool isValid = await validator.validate(
           dataType: 'user',
           data: data,
           catalog: catalog,
@@ -54,12 +54,12 @@ void main() {
     );
 
     test('returns false for invalid data (wrong type)', () async {
-      final data = {
+      final Map<String, String> data = <String, String>{
         'name': 'Alice',
         'email': 'alice@example.com',
         'age': 'thirty',
       };
-      final isValid = await validator.validate(
+      final bool isValid = await validator.validate(
         dataType: 'user',
         data: data,
         catalog: catalog,
@@ -68,8 +68,8 @@ void main() {
     });
 
     test('returns false for invalid data (wrong format)', () async {
-      final data = {'name': 'Alice', 'email': 'not-an-email'};
-      final isValid = await validator.validate(
+      final Map<String, String> data = <String, String>{'name': 'Alice', 'email': 'not-an-email'};
+      final bool isValid = await validator.validate(
         dataType: 'user',
         data: data,
         catalog: catalog,
@@ -78,8 +78,8 @@ void main() {
     });
 
     test('returns true for a data type not in the catalog', () async {
-      final data = {'any': 'data'};
-      final isValid = await validator.validate(
+      final Map<String, String> data = <String, String>{'any': 'data'};
+      final bool isValid = await validator.validate(
         dataType: 'unknown_type',
         data: data,
         catalog: catalog,
@@ -87,13 +87,13 @@ void main() {
       expect(isValid, isTrue);
     });
     test('returns true when dataTypes map is empty', () async {
-      catalog = WidgetCatalog.fromMap({
+      catalog = WidgetCatalog.fromMap(<String, Object?>{
         'catalogVersion': '1.0.0',
         'items': <String, Object?>{},
         'dataTypes': <String, Object?>{},
       });
-      final data = {'any': 'data'};
-      final isValid = await validator.validate(
+      final Map<String, String> data = <String, String>{'any': 'data'};
+      final bool isValid = await validator.validate(
         dataType: 'user',
         data: data,
         catalog: catalog,

@@ -36,6 +36,7 @@ void main() {
                       'name': 'addOrUpdateSurface',
                       'input': {
                         'surfaceId': 'surface1',
+                        // ignore: lines_longer_than_80_chars
                         'definition': {'root': 'root1', 'widgets': <Map<String, Object?>>[]},
                       },
                     },
